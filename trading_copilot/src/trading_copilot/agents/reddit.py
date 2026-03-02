@@ -11,7 +11,7 @@ from trading_copilot.agents.base import (
     ResearchAgent,
     WebSearchError,
 )
-from trading_copilot.models import AgentType, ArticleSentiment, SourceConfig
+from trading_copilot.models import AgentType, ArticleSentiment, Signal, SourceConfig
 
 
 class RedditPost:
@@ -48,6 +48,7 @@ class RedditOutput:
         status: str,
         data_source: str = "reddit",
         error_message: Optional[str] = None,
+        signal: Optional[Signal] = None,
     ):
         self.ticker = ticker
         self.posts = posts
@@ -55,6 +56,7 @@ class RedditOutput:
         self.status = status
         self.data_source = data_source
         self.error_message = error_message
+        self.signal = signal
 
 
 class RedditAgent(ResearchAgent):

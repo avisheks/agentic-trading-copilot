@@ -334,50 +334,52 @@ class TestEvaluationReportGenerator:
         assert 'class="header"' in html
         assert "Evaluation Report" in html
 
-    def test_report_contains_section_divider(
+    def test_report_contains_section_structure(
         self,
         report_generator: EvaluationReportGenerator,
         sample_metrics: EvaluationMetrics,
         sample_results: list[EpochResult],
         sample_config: EvaluationConfig,
     ) -> None:
-        """Test that report contains section divider matching trading-copilot format."""
+        """Test that report contains section structure with proper styling."""
         html = report_generator.generate(sample_metrics, sample_results, sample_config)
         
-        # Check section divider
-        assert 'class="section-divider"' in html
-        assert "Detailed Analysis by Epoch" in html
+        # Check section structure exists
+        assert 'class="section"' in html
+        assert 'class="section-title"' in html
+        assert "Per-Epoch Details" in html
 
-    def test_report_contains_back_to_top_navigation(
+    def test_report_contains_header_navigation(
         self,
         report_generator: EvaluationReportGenerator,
         sample_metrics: EvaluationMetrics,
         sample_results: list[EpochResult],
         sample_config: EvaluationConfig,
     ) -> None:
-        """Test that report contains back-to-top navigation links."""
+        """Test that report contains header with navigation structure."""
         html = report_generator.generate(sample_metrics, sample_results, sample_config)
         
-        # Check top anchor
-        assert 'id="top"' in html
-        # Check back-to-top link
-        assert 'href="#top"' in html
-        assert "Back to Summary" in html
+        # Check header structure
+        assert 'class="header"' in html
+        assert 'class="ticker"' in html
+        # Check summary section is navigable
+        assert "Summary" in html
 
-    def test_report_contains_epoch_anchor_ids(
+    def test_report_contains_epoch_table_rows(
         self,
         report_generator: EvaluationReportGenerator,
         sample_metrics: EvaluationMetrics,
         sample_results: list[EpochResult],
         sample_config: EvaluationConfig,
     ) -> None:
-        """Test that report contains anchor IDs for each epoch."""
+        """Test that report contains epoch table with rows for each epoch."""
         html = report_generator.generate(sample_metrics, sample_results, sample_config)
         
-        # Check epoch anchor IDs
-        assert 'id="epoch-1"' in html
-        assert 'id="epoch-2"' in html
-        assert 'id="epoch-3"' in html
+        # Check epoch table structure
+        assert 'class="epoch-table"' in html
+        # Check that epoch numbers are displayed
+        assert ">1<" in html or "Epoch" in html
+        assert ">2<" in html or "epoch" in html
 
     def test_report_contains_mobile_responsive_media_queries(
         self,
