@@ -57,3 +57,69 @@ class DataSourceConfig:
     earnings_sources: list[SourceConfig]
     macro_sources: list[SourceConfig]
     last_updated: datetime
+
+
+@dataclass
+class NewsArticle:
+    headline: str
+    source: str
+    published_at: datetime
+    summary: str
+    url: str
+    sentiment: ArticleSentiment
+
+
+@dataclass
+class NewsOutput:
+    ticker: str
+    articles: list[NewsArticle]
+    retrieved_at: datetime
+    status: str  # "success", "partial", "no_data"
+    error_message: str | None = None
+
+
+@dataclass
+class EarningsData:
+    fiscal_quarter: str
+    revenue: float
+    eps: float
+    guidance: str | None
+    management_commentary: str | None
+    report_date: datetime
+
+
+@dataclass
+class AnalystExpectations:
+    expected_revenue: float
+    expected_eps: float
+
+
+@dataclass
+class EarningsOutput:
+    ticker: str
+    earnings: EarningsData | None
+    expectations: AnalystExpectations | None
+    comparison: EarningsComparison | None
+    retrieved_at: datetime
+    status: str
+    error_message: str | None = None
+
+
+@dataclass
+class MacroFactor:
+    category: str  # "geopolitical", "interest_rates", "supply_chain", "trade"
+    description: str
+    impact: str  # "positive", "negative", "neutral"
+    relevance: str  # Why this matters for the ticker
+
+
+@dataclass
+class MacroOutput:
+    ticker: str
+    sector: str
+    factors: list[MacroFactor]
+    risks: list[str]
+    opportunities: list[str]
+    retrieved_at: datetime
+    status: str
+    error_message: str | None = None

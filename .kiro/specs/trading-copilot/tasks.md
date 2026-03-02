@@ -47,25 +47,25 @@ This implementation plan follows an incremental MVP approach, starting with core
 
 ### Phase 2: First Agent - News Research (P0)
 
-- [ ] 4. Implement News Agent
-  - [ ] 4.1 Create base ResearchAgent abstract class
+- [x] 4. Implement News Agent
+  - [x] 4.1 Create base ResearchAgent abstract class
     - Define abstract research() method
     - Define get_agent_type() method
     - Implement common error handling patterns
     - _Requirements: 2.1, 3.5, 5.3_
   
-  - [ ] 4.2 Implement NewsAgent class
+  - [x] 4.2 Implement NewsAgent class
     - Implement research() to call Alpha Vantage News API
     - Parse API response into NewsArticle dataclasses
     - Filter articles to past 14 days
     - _Requirements: 2.1, 2.2_
   
-  - [ ] 4.3 Implement news deduplication
+  - [x] 4.3 Implement news deduplication
     - Create deduplicate() method using headline similarity
     - Remove articles with >90% headline similarity
     - _Requirements: 2.4_
   
-  - [ ] 4.4 Implement news sentiment categorization
+  - [x] 4.4 Implement news sentiment categorization
     - Use Claude via Bedrock to classify article sentiment
     - Categorize as POSITIVE, NEGATIVE, or NEUTRAL
     - _Requirements: 2.5_
