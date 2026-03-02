@@ -1,0 +1,33 @@
+# Trading Copilot Data Source Configuration
+# Each agent type can have multiple data sources for redundancy
+
+news_sources:
+  - name: "Alpha Vantage News"
+    api_endpoint: "https://www.alphavantage.co/query"
+    api_key_env: "ALPHA_VANTAGE_API_KEY"
+    added_at: "2024-01-01T00:00:00"
+    enabled: true
+  - name: "Finnhub News"
+    api_endpoint: "https://finnhub.io/api/v1/company-news"
+    api_key_env: "FINNHUB_API_KEY"
+    added_at: "2024-01-01T00:00:00"
+    enabled: true
+
+earnings_sources:
+  - name: "Financial Modeling Prep"
+    api_endpoint: "https://financialmodelingprep.com/api/v3"
+    api_key_env: "FMP_API_KEY"
+    added_at: "2024-01-01T00:00:00"
+    enabled: true
+  - name: "Alpha Vantage Earnings"
+    api_endpoint: "https://www.alphavantage.co/query"
+    api_key_env: "ALPHA_VANTAGE_API_KEY"
+    added_at: "2024-01-01T00:00:00"
+    enabled: true
+
+macro_sources:
+  - name: "FRED API"
+    api_endpoint: "https://api.stlouisfed.org/fred"
+    api_key_env: "FRED_API_KEY"
+    added_at: "2024-01-01T00:00:00"
+    enabled: true

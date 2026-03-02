@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Git Commit After Task",
+  "description": "Automatically commits changes to git when the agent completes a task, using conventional commit format",
+  "version": "1",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check if there are uncommitted changes in the trading_copilot directory. If there are changes, create a git commit with a conventional commit message describing what was implemented. Use format: feat(component): description. Do not push the commit."
+  }
+}

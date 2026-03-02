@@ -1,0 +1,3 @@
+### 03/01
+
+I want to build a trading-copilot that. The trading-copilot with take a stock-ticker as input. Using one or more agents, It would then research market news, latest company earnings call, macro trends (such as geo-political tension). Finmally, it would aggregate all the output, summariz and analyze them and provide an high-level (bullish or bearish) sentiment for the ticker for the upcoming 1-2 weeks. 
