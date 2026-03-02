@@ -79,6 +79,11 @@ class SentimentAnalyzer:
             if news_signal:
                 signals.append(news_signal)
 
+        # Extract signal from Reddit
+        if aggregated.reddit and aggregated.reddit.status == "success":
+            if aggregated.reddit.signal:
+                signals.append(aggregated.reddit.signal)
+
         # Future: Extract signals from earnings and macro when implemented
 
         return signals
@@ -205,10 +210,21 @@ class SentimentAnalyzer:
 
         signals_text = "; ".join(signal_summaries)
 
-        return (
+        summary = (
             f"Overall outlook for {ticker} is {sentiment_word} for the next 1-2 weeks. "
             f"{signals_text}."
         )
+
+        # Add Reddit citation if data available
+        if aggregated.reddit and aggregated.reddit.status == "success" and aggregated.reddit.posts:
+            post_count = len(aggregated.reddit.posts)
+            subreddits = list(set(p.subreddit for p in aggregated.reddit.posts))
+            subreddit_text = ", ".join(f"r/{s}" for s in subreddits[:3])
+            if len(subreddits) > 3:
+                subreddit_text += f" and {len(subreddits) - 3} more"
+            summary += f" Reddit discussions from {subreddit_text} ({post_count} posts) were analyzed."
+
+        return summary
 
     def _extract_key_factors(
         self,
@@ -236,6 +252,25 @@ class SentimentAnalyzer:
                 factors.append(f"Negative news coverage ({negative}/{article_count} articles)")
             else:
                 factors.append(f"Mixed news coverage ({article_count} articles)")
+
+        # Add factors from Reddit
+        if aggregated.reddit and aggregated.reddit.status == "success" and aggregated.reddit.posts:
+            post_count = len(aggregated.reddit.posts)
+            positive = sum(
+                1 for p in aggregated.reddit.posts
+                if p.sentiment == ArticleSentiment.POSITIVE
+            )
+            negative = sum(
+                1 for p in aggregated.reddit.posts
+                if p.sentiment == ArticleSentiment.NEGATIVE
+            )
+
+            if positive > negative:
+                factors.append(f"Positive Reddit sentiment ({positive}/{post_count} posts)")
+            elif negative > positive:
+                factors.append(f"Negative Reddit sentiment ({negative}/{post_count} posts)")
+            else:
+                factors.append(f"Mixed Reddit sentiment ({post_count} posts)")
 
         # Add signal-based factors
         for signal in signals:
@@ -277,6 +312,15 @@ class SentimentAnalyzer:
                 risks.append("Some news sources were unavailable")
             elif aggregated.news.status == "no_data":
                 risks.append("No recent news data available")
+
+        # Check Reddit-specific risks
+        if aggregated.reddit:
+            if aggregated.reddit.status == "partial":
+                risks.append("Some Reddit sources were unavailable")
+            elif aggregated.reddit.status == "no_data":
+                risks.append("No recent Reddit data available")
+            elif aggregated.reddit.status == "error":
+                risks.append("Reddit data retrieval failed")
 
         if not risks:
             risks.append("Market conditions can change rapidly")
