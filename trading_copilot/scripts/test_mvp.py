@@ -9,7 +9,7 @@ Tests the complete pipeline:
 4. Report generation
 
 Usage:
-    python scripts/test_mvp.py [--ticker TICKER] [--mock]
+    python scripts/test_mvp.py [--ticker TICKER] [--config PATH] [--mock]
 """
 
 import asyncio
@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from trading_copilot.agents.news import NewsAgent
 from trading_copilot.analyzer import SentimentAnalyzer
-from trading_copilot.config import ConfigManager
+from trading_copilot.config import AppConfigManager, ConfigManager
 from trading_copilot.models import (
     AgentType,
     AggregatedReport,
@@ -194,11 +194,31 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="Test Trading Copilot MVP")
-    parser.add_argument("--ticker", default="AAPL", help="Stock ticker to analyze")
+    parser.add_argument("--ticker", default=None, help="Stock ticker to analyze (overrides config file)")
+    parser.add_argument("--config", default=None, help="Path to app_config.yaml (default: config/app_config.yaml)")
     parser.add_argument("--mock", action="store_true", help="Use mock data instead of real APIs")
     args = parser.parse_args()
     
-    success = asyncio.run(run_mvp_test(args.ticker, args.mock))
+    # Load app config
+    config_path = Path(args.config) if args.config else Path(__file__).parent.parent / "config" / "app_config.yaml"
+    
+    # Determine ticker to use
+    if args.ticker:
+        # Command-line argument overrides config file
+        ticker = args.ticker
+    else:
+        # Load from config file
+        try:
+            app_config_manager = AppConfigManager(config_path)
+            app_config = app_config_manager.load()
+            # Use first ticker from config (or could process all)
+            ticker = app_config.tickers.symbols[0] if app_config.tickers.symbols else "AAPL"
+        except Exception as e:
+            print(f"Warning: Could not load app config: {e}")
+            print("Using default ticker: AAPL")
+            ticker = "AAPL"
+    
+    success = asyncio.run(run_mvp_test(ticker, args.mock))
     sys.exit(0 if success else 1)
 
 

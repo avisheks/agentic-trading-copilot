@@ -1,0 +1,32 @@
+# Trading Copilot Application Configuration
+# This file contains user-configurable inputs for the Trading Copilot.
+
+# Stock tickers to analyze
+tickers:
+  - AAPL
+  - MSFT
+  - GOOGL
+  - SNPS
+  - CRWV  
+  - UUUU
+
+# Email delivery settings
+email:
+  enabled: false
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  smtp_username: user@example.com
+  smtp_password_env: SMTP_PASSWORD  # Environment variable containing the password
+  from_email: trading-copilot@example.com
+  to_emails:
+    - recipient@example.com
+  use_tls: true
+
+# Report generation preferences
+report:
+  format: html  # "html" or "text"
+  include_news: true
+  include_earnings: true
+  include_macro: true
+  save_to_file: false
+  output_directory: ./reports
