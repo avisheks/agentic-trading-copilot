@@ -123,3 +123,35 @@ class MacroOutput:
     retrieved_at: datetime
     status: str
     error_message: str | None = None
+
+
+@dataclass
+class AggregatedReport:
+    ticker: str
+    news: NewsOutput | None
+    earnings: EarningsOutput | None
+    macro: MacroOutput | None
+    aggregated_at: datetime
+    missing_components: list[AgentType]
+
+
+@dataclass
+class Signal:
+    source: AgentType
+    direction: Sentiment
+    strength: float  # 0.0 to 1.0
+    reasoning: str
+
+
+@dataclass
+class SentimentResult:
+    ticker: str
+    sentiment: Sentiment
+    confidence: ConfidenceLevel
+    signals: list[Signal]
+    summary: str
+    key_factors: list[str]
+    risks: list[str]
+    disclaimer: str
+    analyzed_at: datetime
+    aggregated_report: AggregatedReport

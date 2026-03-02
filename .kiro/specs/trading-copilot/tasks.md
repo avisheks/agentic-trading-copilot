@@ -77,8 +77,8 @@ This implementation plan follows an incremental MVP approach, starting with core
     - **Property 6: News Date Range**
     - **Validates: Requirements 2.1, 2.2, 2.4, 2.5**
 
-- [ ] 5. Implement basic sentiment analysis
-  - [ ] 5.1 Create SentimentAnalyzer class
+- [-] 5. Implement basic sentiment analysis
+  - [-] 5.1 Create SentimentAnalyzer class
     - Initialize with Bedrock client for Claude
     - Implement analyze() method for single-agent input
     - Generate BULLISH/BEARISH classification with rationale

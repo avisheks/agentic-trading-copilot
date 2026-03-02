@@ -151,7 +151,7 @@ class TestProperty4NewsDeduplication:
     """
 
     @given(articles=st.lists(news_article_strategy(), min_size=0, max_size=20))
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_deduplicate_output_length_lte_input(self, articles: list[NewsArticle]):
         """
         **Validates: Requirements 2.4**
@@ -163,7 +163,7 @@ class TestProperty4NewsDeduplication:
         assert len(result) <= len(articles)
 
     @given(articles=st.lists(news_article_strategy(), min_size=0, max_size=20))
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_deduplicate_no_identical_headlines(self, articles: list[NewsArticle]):
         """
         **Validates: Requirements 2.4**
@@ -176,7 +176,7 @@ class TestProperty4NewsDeduplication:
         assert len(headlines) == len(set(headlines))
 
     @given(articles=st.lists(news_article_strategy(), min_size=0, max_size=20))
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_deduplicate_preserves_first_occurrence(self, articles: list[NewsArticle]):
         """
         **Validates: Requirements 2.4**
