@@ -17,6 +17,133 @@ from trading_copilot.models import (
 from trading_copilot.report import TextReportGenerator
 
 
+class TestGenerateTable:
+    """Tests for generate_table method."""
+
+    @pytest.fixture
+    def generator(self):
+        """Create a TextReportGenerator instance."""
+        return TextReportGenerator()
+
+    @pytest.fixture
+    def sample_results(self):
+        """Create sample sentiment results for multiple tickers."""
+        results = []
+        for ticker, sentiment, confidence in [
+            ("AAPL", Sentiment.BULLISH, ConfidenceLevel.HIGH),
+            ("GOOGL", Sentiment.BEARISH, ConfidenceLevel.MEDIUM),
+            ("MSFT", Sentiment.BULLISH, ConfidenceLevel.LOW),
+        ]:
+            news = NewsOutput(
+                ticker=ticker,
+                articles=[
+                    NewsArticle(
+                        headline=f"{ticker} news headline",
+                        source="Reuters",
+                        published_at=datetime(2026, 2, 25, 10, 0, tzinfo=timezone.utc),
+                        summary="Summary",
+                        url="https://example.com",
+                        sentiment=ArticleSentiment.POSITIVE,
+                    )
+                ],
+                retrieved_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                status="success",
+            )
+            aggregated = AggregatedReport(
+                ticker=ticker,
+                news=news,
+                earnings=None,
+                macro=None,
+                aggregated_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                missing_components=[AgentType.EARNINGS, AgentType.MACRO],
+            )
+            result = SentimentResult(
+                ticker=ticker,
+                sentiment=sentiment,
+                confidence=confidence,
+                signals=[
+                    Signal(
+                        source=AgentType.NEWS,
+                        direction=sentiment,
+                        strength=0.7,
+                        reasoning=f"Based on {ticker} news analysis.",
+                    )
+                ],
+                summary=f"Outlook for {ticker}.",
+                key_factors=["News coverage"],
+                risks=["Market volatility"],
+                disclaimer="Not financial advice.",
+                analyzed_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                aggregated_report=aggregated,
+            )
+            results.append(result)
+        return results
+
+    def test_generate_table_returns_string(self, generator, sample_results):
+        """Test that generate_table returns a non-empty string."""
+        table = generator.generate_table(sample_results)
+        assert isinstance(table, str)
+        assert len(table) > 0
+
+    def test_generate_table_contains_all_tickers(self, generator, sample_results):
+        """Test that table contains all ticker symbols."""
+        table = generator.generate_table(sample_results)
+        assert "AAPL" in table
+        assert "GOOGL" in table
+        assert "MSFT" in table
+
+    def test_generate_table_contains_header(self, generator, sample_results):
+        """Test that table contains header row."""
+        table = generator.generate_table(sample_results)
+        assert "TICKER" in table
+        assert "SENTIMENT" in table
+        assert "CONFIDENCE" in table
+
+    def test_generate_table_shows_sentiment_values(self, generator, sample_results):
+        """Test that table shows sentiment values."""
+        table = generator.generate_table(sample_results)
+        assert "BULLISH" in table
+        assert "BEARISH" in table
+
+    def test_generate_table_shows_confidence_values(self, generator, sample_results):
+        """Test that table shows confidence values."""
+        table = generator.generate_table(sample_results)
+        assert "HIGH" in table
+        assert "MEDIUM" in table
+        assert "LOW" in table
+
+    def test_generate_table_shows_news_count(self, generator, sample_results):
+        """Test that table shows news article count."""
+        table = generator.generate_table(sample_results)
+        # Each ticker has 1 article
+        lines = table.split("\n")
+        data_lines = [l for l in lines if "AAPL" in l or "GOOGL" in l or "MSFT" in l]
+        for line in data_lines:
+            assert "1" in line  # 1 article per ticker
+
+    def test_generate_table_shows_total_count(self, generator, sample_results):
+        """Test that table shows total tickers analyzed."""
+        table = generator.generate_table(sample_results)
+        assert "Total tickers analyzed: 3" in table
+
+    def test_generate_table_contains_disclaimer(self, generator, sample_results):
+        """Test that table contains disclaimer."""
+        table = generator.generate_table(sample_results)
+        assert "DISCLAIMER" in table
+        assert "not financial advice" in table
+
+    def test_generate_table_empty_list(self, generator):
+        """Test generate_table with empty list."""
+        table = generator.generate_table([])
+        assert "No results to display" in table
+
+    def test_generate_table_single_result(self, generator, sample_results):
+        """Test generate_table with single result."""
+        table = generator.generate_table([sample_results[0]])
+        assert "AAPL" in table
+        assert "Total tickers analyzed: 1" in table
+
+
 class TestTextReportGenerator:
     """Tests for TextReportGenerator."""
 

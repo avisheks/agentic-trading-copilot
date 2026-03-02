@@ -1,6 +1,6 @@
 """Text report generator for Trading Copilot."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from trading_copilot.models import (
     ArticleSentiment,
@@ -17,6 +17,85 @@ class TextReportGenerator:
         """Initialize the text report generator."""
         self._section_separator = "=" * 60
         self._subsection_separator = "-" * 40
+
+    def generate_table(self, results: list[SentimentResult]) -> str:
+        """
+        Generate a tabular summary report for multiple tickers.
+
+        Args:
+            results: List of SentimentResult objects
+
+        Returns:
+            Formatted table string with one row per ticker
+        """
+        if not results:
+            return "No results to display."
+
+        # Define column widths
+        col_ticker = 8
+        col_sentiment = 10
+        col_confidence = 12
+        col_news = 6
+        col_signals = 40
+
+        # Build header
+        header = (
+            f"{'TICKER':<{col_ticker}} | "
+            f"{'SENTIMENT':<{col_sentiment}} | "
+            f"{'CONFIDENCE':<{col_confidence}} | "
+            f"{'NEWS':<{col_news}} | "
+            f"{'KEY SIGNAL':<{col_signals}}"
+        )
+        separator = "-" * len(header)
+
+        lines = [
+            self._section_separator,
+            "TRADING COPILOT SUMMARY TABLE",
+            f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+            self._section_separator,
+            "",
+            header,
+            separator,
+        ]
+
+        # Build rows
+        for result in results:
+            ticker = result.ticker[:col_ticker]
+            sentiment = result.sentiment.value.upper()
+            confidence = result.confidence.value.upper()
+
+            # Count news articles
+            news_count = "N/A"
+            if result.aggregated_report.news and result.aggregated_report.news.articles:
+                news_count = str(len(result.aggregated_report.news.articles))
+
+            # Get primary signal reasoning (truncated)
+            key_signal = "No signals"
+            if result.signals:
+                signal = result.signals[0]
+                direction = "↑" if signal.direction == Sentiment.BULLISH else "↓"
+                key_signal = f"{direction} {signal.reasoning}"
+                if len(key_signal) > col_signals:
+                    key_signal = key_signal[: col_signals - 3] + "..."
+
+            row = (
+                f"{ticker:<{col_ticker}} | "
+                f"{sentiment:<{col_sentiment}} | "
+                f"{confidence:<{col_confidence}} | "
+                f"{news_count:<{col_news}} | "
+                f"{key_signal:<{col_signals}}"
+            )
+            lines.append(row)
+
+        lines.append(separator)
+        lines.append("")
+        lines.append(f"Total tickers analyzed: {len(results)}")
+        lines.append("")
+        lines.append(self._section_separator)
+        lines.append("DISCLAIMER: This is not financial advice. Always do your own research.")
+        lines.append(self._section_separator)
+
+        return "\n".join(lines)
 
     def generate(self, result: SentimentResult) -> str:
         """
