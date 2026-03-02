@@ -97,6 +97,114 @@ class TextReportGenerator:
 
         return "\n".join(lines)
 
+    def generate_full_report(self, results: list[SentimentResult]) -> str:
+        """
+        Generate a complete report with summary table followed by detailed reports.
+
+        Args:
+            results: List of SentimentResult objects
+
+        Returns:
+            Formatted report with table summary and detailed analysis per ticker
+        """
+        if not results:
+            return "No results to display."
+
+        sections = []
+
+        # Add summary table (without its own disclaimer)
+        table_lines = self._generate_table_without_disclaimer(results)
+        sections.append(table_lines)
+
+        # Add detailed reports section header
+        sections.append("")
+        sections.append(self._section_separator)
+        sections.append("DETAILED ANALYSIS BY TICKER")
+        sections.append(self._section_separator)
+
+        # Add detailed report for each ticker
+        for result in results:
+            detailed = self._generate_detailed_report(result)
+            sections.append("")
+            sections.append(detailed)
+
+        # Add final disclaimer
+        sections.append("")
+        sections.append(self._section_separator)
+        sections.append("DISCLAIMER: This is not financial advice. Always do your own research.")
+        sections.append(self._section_separator)
+
+        return "\n".join(sections)
+
+    def _generate_table_without_disclaimer(self, results: list[SentimentResult]) -> str:
+        """Generate table without disclaimer (for use in combined reports)."""
+        col_ticker = 8
+        col_sentiment = 10
+        col_confidence = 12
+        col_news = 6
+        col_signals = 40
+
+        header = (
+            f"{'TICKER':<{col_ticker}} | "
+            f"{'SENTIMENT':<{col_sentiment}} | "
+            f"{'CONFIDENCE':<{col_confidence}} | "
+            f"{'NEWS':<{col_news}} | "
+            f"{'KEY SIGNAL':<{col_signals}}"
+        )
+        separator = "-" * len(header)
+
+        lines = [
+            self._section_separator,
+            "TRADING COPILOT SUMMARY TABLE",
+            f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}",
+            self._section_separator,
+            "",
+            header,
+            separator,
+        ]
+
+        for result in results:
+            ticker = result.ticker[:col_ticker]
+            sentiment = result.sentiment.value.upper()
+            confidence = result.confidence.value.upper()
+
+            news_count = "N/A"
+            if result.aggregated_report.news and result.aggregated_report.news.articles:
+                news_count = str(len(result.aggregated_report.news.articles))
+
+            key_signal = "No signals"
+            if result.signals:
+                signal = result.signals[0]
+                direction = "↑" if signal.direction == Sentiment.BULLISH else "↓"
+                key_signal = f"{direction} {signal.reasoning}"
+                if len(key_signal) > col_signals:
+                    key_signal = key_signal[: col_signals - 3] + "..."
+
+            row = (
+                f"{ticker:<{col_ticker}} | "
+                f"{sentiment:<{col_sentiment}} | "
+                f"{confidence:<{col_confidence}} | "
+                f"{news_count:<{col_news}} | "
+                f"{key_signal:<{col_signals}}"
+            )
+            lines.append(row)
+
+        lines.append(separator)
+        lines.append("")
+        lines.append(f"Total tickers analyzed: {len(results)}")
+
+        return "\n".join(lines)
+
+    def _generate_detailed_report(self, result: SentimentResult) -> str:
+        """Generate detailed report for a single ticker (without disclaimer)."""
+        sections = [
+            self._render_header(result),
+            self._render_executive_summary(result),
+            self._render_news_findings(result),
+            self._render_sentiment_recommendation(result),
+        ]
+        return "\n\n".join(sections)
+
     def generate(self, result: SentimentResult) -> str:
         """
         Generate a complete text report.

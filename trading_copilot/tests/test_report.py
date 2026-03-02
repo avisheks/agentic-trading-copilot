@@ -144,6 +144,117 @@ class TestGenerateTable:
         assert "Total tickers analyzed: 1" in table
 
 
+class TestGenerateFullReport:
+    """Tests for generate_full_report method."""
+
+    @pytest.fixture
+    def generator(self):
+        """Create a TextReportGenerator instance."""
+        return TextReportGenerator()
+
+    @pytest.fixture
+    def sample_results(self):
+        """Create sample sentiment results for multiple tickers."""
+        results = []
+        for ticker, sentiment, confidence in [
+            ("AAPL", Sentiment.BULLISH, ConfidenceLevel.HIGH),
+            ("GOOGL", Sentiment.BEARISH, ConfidenceLevel.MEDIUM),
+        ]:
+            news = NewsOutput(
+                ticker=ticker,
+                articles=[
+                    NewsArticle(
+                        headline=f"{ticker} news headline",
+                        source="Reuters",
+                        published_at=datetime(2026, 2, 25, 10, 0, tzinfo=timezone.utc),
+                        summary="Summary",
+                        url="https://example.com",
+                        sentiment=ArticleSentiment.POSITIVE,
+                    )
+                ],
+                retrieved_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                status="success",
+            )
+            aggregated = AggregatedReport(
+                ticker=ticker,
+                news=news,
+                earnings=None,
+                macro=None,
+                aggregated_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                missing_components=[AgentType.EARNINGS, AgentType.MACRO],
+            )
+            result = SentimentResult(
+                ticker=ticker,
+                sentiment=sentiment,
+                confidence=confidence,
+                signals=[
+                    Signal(
+                        source=AgentType.NEWS,
+                        direction=sentiment,
+                        strength=0.7,
+                        reasoning=f"Based on {ticker} news analysis.",
+                    )
+                ],
+                summary=f"Outlook for {ticker}.",
+                key_factors=["News coverage"],
+                risks=["Market volatility"],
+                disclaimer="Not financial advice.",
+                analyzed_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
+                aggregated_report=aggregated,
+            )
+            results.append(result)
+        return results
+
+    def test_full_report_contains_summary_table(self, generator, sample_results):
+        """Test that full report contains summary table."""
+        report = generator.generate_full_report(sample_results)
+        assert "TRADING COPILOT SUMMARY TABLE" in report
+        assert "TICKER" in report
+        assert "SENTIMENT" in report
+
+    def test_full_report_contains_detailed_section_header(self, generator, sample_results):
+        """Test that full report contains detailed analysis header."""
+        report = generator.generate_full_report(sample_results)
+        assert "DETAILED ANALYSIS BY TICKER" in report
+
+    def test_full_report_contains_all_ticker_details(self, generator, sample_results):
+        """Test that full report contains detailed reports for all tickers."""
+        report = generator.generate_full_report(sample_results)
+        assert "Ticker: AAPL" in report
+        assert "Ticker: GOOGL" in report
+
+    def test_full_report_contains_executive_summaries(self, generator, sample_results):
+        """Test that full report contains executive summaries."""
+        report = generator.generate_full_report(sample_results)
+        assert "EXECUTIVE SUMMARY" in report
+        assert "Outlook for AAPL" in report
+        assert "Outlook for GOOGL" in report
+
+    def test_full_report_contains_news_findings(self, generator, sample_results):
+        """Test that full report contains news findings sections."""
+        report = generator.generate_full_report(sample_results)
+        assert "NEWS FINDINGS" in report
+
+    def test_full_report_contains_single_disclaimer(self, generator, sample_results):
+        """Test that full report has disclaimer at the end only."""
+        report = generator.generate_full_report(sample_results)
+        # Should have exactly one disclaimer at the end
+        assert report.count("DISCLAIMER") == 1
+        assert report.rstrip().endswith("=" * 60)
+
+    def test_full_report_table_before_details(self, generator, sample_results):
+        """Test that summary table appears before detailed reports."""
+        report = generator.generate_full_report(sample_results)
+        table_pos = report.find("TRADING COPILOT SUMMARY TABLE")
+        details_pos = report.find("DETAILED ANALYSIS BY TICKER")
+        assert table_pos < details_pos
+
+    def test_full_report_empty_list(self, generator):
+        """Test generate_full_report with empty list."""
+        report = generator.generate_full_report([])
+        assert "No results to display" in report
+
+
 class TestTextReportGenerator:
     """Tests for TextReportGenerator."""
 
