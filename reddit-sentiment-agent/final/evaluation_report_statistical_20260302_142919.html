@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Evaluation Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 10px; }
+        .header .subtitle { font-size: 1.1rem; opacity: 0.9; }
+        .header .timestamp { font-size: 0.9rem; opacity: 0.8; margin-top: 10px; }
+        .section { padding: 30px; border-bottom: 1px solid #e2e8f0; }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .ticker-header {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .ticker-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #4299e1;
+        }
+        .stat-label {
+            font-size: 0.85rem;
+            color: #718096;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-detail {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-top: 4px;
+        }
+        .metric-good { color: #38a169; }
+        .metric-warning { color: #dd6b20; }
+        .metric-bad { color: #e53e3e; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: #edf2f7;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        tr:hover { background-color: #f7fafc; }
+        .confusion-matrix {
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        .confusion-matrix td { text-align: center; font-weight: 600; }
+        .cm-tp { background: #c6f6d5; color: #22543d; }
+        .cm-fp { background: #fed7d7; color: #742a2a; }
+        .cm-fn { background: #fed7d7; color: #742a2a; }
+        .cm-tn { background: #c6f6d5; color: #22543d; }
+        .footer {
+            background: #edf2f7;
+            padding: 20px;
+            text-align: center;
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>Statistical Evaluation Report</h1>
+            <div class="subtitle">Multi-Run Analysis with Mean & Standard Deviation</div>
+            <div class="timestamp">Generated: 2026-03-02 22:29 UTC</div>
+        </header>
+        
+        <section class="section">
+            <h2 class="section-title">Summary</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Total Tickers</div>
+                    <div class="stat-value">6</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Epochs per Ticker</div>
+                    <div class="stat-value">5</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Runs per Epoch</div>
+                    <div class="stat-value">5</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Evaluations</div>
+                    <div class="stat-value">150</div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2d3748;">Ticker Overview</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticker</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Mean Precision</th>
+                        <th>Mean Recall</th>
+                        <th>Mean F1</th>
+                        <th>Completed Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td><strong>AAPL</strong></td>
+                        <td class="metric-good">80.0%</td>
+                        <td>44.7%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>CRWV</strong></td>
+                        <td class="metric-bad">20.0%</td>
+                        <td>44.7%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>GOOGL</strong></td>
+                        <td class="metric-warning">60.0%</td>
+                        <td>54.8%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>MSFT</strong></td>
+                        <td class="metric-warning">60.0%</td>
+                        <td>54.8%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>SNPS</strong></td>
+                        <td class="metric-warning">60.0%</td>
+                        <td>54.8%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>UUUU</strong></td>
+                        <td class="metric-bad">40.0%</td>
+                        <td>54.8%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>0.0%</td>
+                        <td>25/25</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">AAPL</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">80.0%</div>
+                    <div class="stat-detail">σ = 44.7%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">CRWV</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">20.0%</div>
+                    <div class="stat-detail">σ = 44.7%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">GOOGL</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">60.0%</div>
+                    <div class="stat-detail">σ = 54.8%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">MSFT</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">60.0%</div>
+                    <div class="stat-detail">σ = 54.8%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">SNPS</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">60.0%</div>
+                    <div class="stat-detail">σ = 54.8%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <section class="section">
+            <div class="ticker-header">
+                <div class="ticker-title">UUUU</div>
+            </div>
+            
+            <h3 style="margin-bottom: 15px; color: #2d3748;">Statistical Metrics</h3>
+            <div class="stats-grid">
+                
+                <div class="stat-box">
+                    <div class="stat-label">Accuracy</div>
+                    <div class="stat-value">40.0%</div>
+                    <div class="stat-detail">σ = 54.8%</div>
+                    <div class="stat-detail">Range: 0.0% - 100.0%</div>
+                    <div class="stat-detail">n = 5</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Precision</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">Recall</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+                
+                <div class="stat-box">
+                    <div class="stat-label">F1 Score</div>
+                    <div class="stat-value">0.0%</div>
+                    <div class="stat-detail">σ = 0.0%</div>
+                    <div class="stat-detail">Range: 0.0% - 0.0%</div>
+                    <div class="stat-detail">n = 25</div>
+                </div>
+            </div>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Confusion Matrix (Aggregated)</h3>
+            <table class="confusion-matrix">
+                <tr>
+                    <th></th>
+                    <th colspan="2">Actual</th>
+                </tr>
+                <tr>
+                    <th>Predicted</th>
+                    <th>Bullish</th>
+                    <th>Bearish</th>
+                </tr>
+                <tr>
+                    <th>Bullish</th>
+                    <td class="cm-tp">0 (TP)</td>
+                    <td class="cm-fp">0 (FP)</td>
+                </tr>
+                <tr>
+                    <th>Bearish</th>
+                    <td class="cm-fn">0 (FN)</td>
+                    <td class="cm-tn">0 (TN)</td>
+                </tr>
+            </table>
+            
+            <h3 style="margin: 30px 0 15px 0; color: #2d3748;">Per-Epoch Statistics</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Epoch</th>
+                        <th>Mean Accuracy</th>
+                        <th>Std Dev</th>
+                        <th>Consensus Prediction</th>
+                        <th>Actual Outcome</th>
+                        <th>Correct Runs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td class="metric-good">100.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>5/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>4</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>0/5</td>
+                    </tr>
+
+                    <tr>
+                        <td>5</td>
+                        <td class="metric-bad">0.0%</td>
+                        <td>0.0%</td>
+                        <td>SENTIMENT.BEARISH</td>
+                        <td>SENTIMENT.BULLISH</td>
+                        <td>0/5</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+
+        <footer class="footer">
+            Statistical Evaluation Report - Trading Copilot<br>
+            Multi-run analysis provides mean and standard deviation metrics for prediction reliability
+        </footer>
+    </div>
+</body>
+</html>

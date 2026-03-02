@@ -158,7 +158,7 @@ This plan implements the Reddit Sentiment Agent feature, extending the existing 
     - **Property 3: Sentiment Classification Logic**
     - **Validates: Requirements 2.2, 2.3**
 
-- [ ] 13. Final checkpoint - Run full test suite and evaluation
+- [x] 13. Final checkpoint - Run full test suite and evaluation
   - Ensure all tests pass, ask the user if questions arise.
   - Run evaluation suite: `trading_copilot/.venv/bin/python trading_copilot/scripts/run_statistical_evaluation.py`
   - Verify metrics are maintained or improved per eval-driven development requirements
