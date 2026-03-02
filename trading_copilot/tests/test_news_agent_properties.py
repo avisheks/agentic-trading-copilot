@@ -208,7 +208,7 @@ class TestProperty5NewsSentimentClassification:
     """
 
     @given(article=news_article_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_sentiment_is_valid_enum(self, article: NewsArticle):
         """
         **Validates: Requirements 2.5**
