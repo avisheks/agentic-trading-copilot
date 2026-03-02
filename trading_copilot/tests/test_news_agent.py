@@ -233,3 +233,183 @@ class TestNewsArticleCompleteness:
         assert article.source and len(article.source) > 0
         assert article.published_at is not None
         assert article.summary and len(article.summary) > 0
+
+
+class TestWebSearchFallback:
+    """Tests for web search fallback functionality (Property 24)."""
+
+    def setup_method(self):
+        self.sources = [
+            SourceConfig(
+                name="Test News",
+                api_endpoint="https://test.com/news",
+                api_key_env="TEST_API_KEY",
+                added_at=datetime.now(timezone.utc),
+                enabled=True,
+            )
+        ]
+        self.agent = NewsAgent(sources=self.sources)
+
+    def test_has_api_keys_returns_false_when_no_keys(self):
+        """_has_api_keys returns False when no API keys are set."""
+        # Ensure the env var is not set
+        import os
+        os.environ.pop("TEST_API_KEY", None)
+        
+        assert self.agent._has_api_keys() is False
+
+    def test_has_api_keys_returns_true_when_key_set(self):
+        """_has_api_keys returns True when API key is set."""
+        import os
+        os.environ["TEST_API_KEY"] = "test_key_value"
+        
+        try:
+            assert self.agent._has_api_keys() is True
+        finally:
+            os.environ.pop("TEST_API_KEY", None)
+
+    def test_has_api_keys_ignores_disabled_sources(self):
+        """_has_api_keys ignores disabled sources."""
+        import os
+        os.environ["TEST_API_KEY"] = "test_key_value"
+        
+        # Create agent with disabled source
+        disabled_sources = [
+            SourceConfig(
+                name="Disabled Source",
+                api_endpoint="https://test.com/news",
+                api_key_env="TEST_API_KEY",
+                added_at=datetime.now(timezone.utc),
+                enabled=False,
+            )
+        ]
+        agent = NewsAgent(sources=disabled_sources)
+        
+        try:
+            assert agent._has_api_keys() is False
+        finally:
+            os.environ.pop("TEST_API_KEY", None)
+
+    def test_parse_web_results_creates_articles(self):
+        """_parse_web_results creates NewsArticle objects from search results."""
+        results = [
+            {
+                "title": "Apple Stock Surges",
+                "source": "Financial Times",
+                "published_at": "2026-02-28T10:00:00Z",
+                "snippet": "Apple shares rose 5% today",
+                "url": "https://ft.com/apple",
+            },
+            {
+                "title": "Tech Rally Continues",
+                "source": "Reuters",
+                "snippet": "Technology stocks continue upward trend",
+                "url": "https://reuters.com/tech",
+            },
+        ]
+        
+        articles = self.agent._parse_web_results(results)
+        
+        assert len(articles) == 2
+        assert articles[0].headline == "Apple Stock Surges"
+        assert articles[0].source == "Financial Times"
+        assert articles[0].summary == "Apple shares rose 5% today"
+        assert articles[0].url == "https://ft.com/apple"
+        assert articles[0].sentiment == ArticleSentiment.NEUTRAL
+
+    def test_parse_web_results_handles_missing_published_at(self):
+        """_parse_web_results handles missing published_at gracefully."""
+        results = [
+            {
+                "title": "Test Article",
+                "source": "Test Source",
+                "snippet": "Test summary",
+                "url": "https://test.com",
+            },
+        ]
+        
+        articles = self.agent._parse_web_results(results)
+        
+        assert len(articles) == 1
+        assert articles[0].published_at is not None
+
+    def test_parse_web_results_handles_empty_list(self):
+        """_parse_web_results handles empty results list."""
+        articles = self.agent._parse_web_results([])
+        assert articles == []
+
+    def test_parse_web_results_uses_summary_field_fallback(self):
+        """_parse_web_results uses 'summary' field if 'snippet' not present."""
+        results = [
+            {
+                "title": "Test Article",
+                "source": "Test Source",
+                "summary": "This is the summary",
+                "url": "https://test.com",
+            },
+        ]
+        
+        articles = self.agent._parse_web_results(results)
+        
+        assert len(articles) == 1
+        assert articles[0].summary == "This is the summary"
+
+    @pytest.mark.asyncio
+    async def test_research_via_web_search_returns_web_search_data_source(self):
+        """_research_via_web_search sets data_source to 'web_search'."""
+        output = await self.agent._research_via_web_search("AAPL")
+        
+        assert output.data_source == "web_search"
+        assert output.ticker == "AAPL"
+
+    @pytest.mark.asyncio
+    async def test_research_via_web_search_handles_no_results(self):
+        """_research_via_web_search handles empty results gracefully."""
+        output = await self.agent._research_via_web_search("AAPL")
+        
+        assert output.status == "no_data"
+        assert output.data_source == "web_search"
+        assert output.articles == []
+
+
+class TestDataSourceField:
+    """Tests for data_source field in NewsOutput."""
+
+    def setup_method(self):
+        self.sources = [
+            SourceConfig(
+                name="Test News",
+                api_endpoint="https://test.com/news",
+                api_key_env="TEST_API_KEY",
+                added_at=datetime.now(timezone.utc),
+                enabled=True,
+            )
+        ]
+        self.agent = NewsAgent(sources=self.sources)
+
+    def test_news_output_default_data_source_is_api(self):
+        """NewsOutput default data_source is 'api'."""
+        from trading_copilot.models import NewsOutput
+        
+        output = NewsOutput(
+            ticker="AAPL",
+            articles=[],
+            retrieved_at=datetime.now(timezone.utc),
+            status="success",
+        )
+        
+        assert output.data_source == "api"
+
+    def test_news_output_can_set_web_search_data_source(self):
+        """NewsOutput can have data_source set to 'web_search'."""
+        from trading_copilot.models import NewsOutput
+        
+        output = NewsOutput(
+            ticker="AAPL",
+            articles=[],
+            retrieved_at=datetime.now(timezone.utc),
+            status="success",
+            data_source="web_search",
+        )
+        
+        assert output.data_source == "web_search"

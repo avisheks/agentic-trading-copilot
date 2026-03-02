@@ -75,6 +75,7 @@ class NewsOutput:
     articles: list[NewsArticle]
     retrieved_at: datetime
     status: str  # "success", "partial", "no_data"
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 
@@ -102,6 +103,7 @@ class EarningsOutput:
     comparison: EarningsComparison | None
     retrieved_at: datetime
     status: str
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 
@@ -122,6 +124,7 @@ class MacroOutput:
     opportunities: list[str]
     retrieved_at: datetime
     status: str
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 

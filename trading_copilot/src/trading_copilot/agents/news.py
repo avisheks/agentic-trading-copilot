@@ -11,6 +11,7 @@ from trading_copilot.agents.base import (
     APIConnectionError,
     AgentExecutionError,
     ResearchAgent,
+    WebSearchError,
 )
 from trading_copilot.models import AgentType, ArticleSentiment, NewsArticle, NewsOutput, SourceConfig
 
@@ -40,11 +41,28 @@ class NewsAgent(ResearchAgent):
         """
         Retrieve news articles from past 14 days.
 
+        Uses API sources if available, falls back to web search otherwise.
+
         Args:
             ticker: Validated stock ticker symbol
 
         Returns:
             NewsOutput with articles and metadata
+        """
+        if self._has_api_keys():
+            return await self._research_via_api(ticker)
+        else:
+            return await self._research_via_web_search(ticker)
+
+    async def _research_via_api(self, ticker: str) -> NewsOutput:
+        """
+        Fetch news using configured API sources.
+
+        Args:
+            ticker: Validated stock ticker symbol
+
+        Returns:
+            NewsOutput with articles from API sources
         """
         all_articles: list[NewsArticle] = []
         errors: list[str] = []
@@ -60,6 +78,10 @@ class NewsAgent(ResearchAgent):
                 errors.append(f"{source.name}: {str(e)}")
             except Exception as e:
                 errors.append(f"{source.name}: Unexpected error - {str(e)}")
+
+        # If all API calls failed, fall back to web search
+        if not all_articles and errors:
+            return await self._research_via_web_search(ticker)
 
         # Filter to past 14 days
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
@@ -88,8 +110,105 @@ class NewsAgent(ResearchAgent):
             articles=deduplicated,
             retrieved_at=datetime.now(timezone.utc),
             status=status,
+            data_source="api",
             error_message="; ".join(errors) if errors else None,
         )
+
+    async def _research_via_web_search(self, ticker: str) -> NewsOutput:
+        """
+        Fetch news using web search fallback.
+
+        Args:
+            ticker: Validated stock ticker symbol
+
+        Returns:
+            NewsOutput with articles from web search
+        """
+        try:
+            query = f"{ticker} stock news"
+            results = await self._web_search_fallback(ticker, query)
+
+            if not results:
+                return NewsOutput(
+                    ticker=ticker,
+                    articles=[],
+                    retrieved_at=datetime.now(timezone.utc),
+                    status="no_data",
+                    data_source="web_search",
+                    error_message="No results from web search",
+                )
+
+            articles = self._parse_web_results(results)
+
+            # Filter to past 14 days
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
+            filtered_articles = self._filter_by_date(articles, cutoff_date)
+
+            # Deduplicate
+            deduplicated = self.deduplicate(filtered_articles)
+
+            # Categorize sentiment
+            for article in deduplicated:
+                if article.sentiment == ArticleSentiment.NEUTRAL:
+                    article.sentiment = self.categorize_sentiment(article)
+
+            status = "success" if deduplicated else "no_data"
+
+            return NewsOutput(
+                ticker=ticker,
+                articles=deduplicated,
+                retrieved_at=datetime.now(timezone.utc),
+                status=status,
+                data_source="web_search",
+                error_message=None,
+            )
+        except WebSearchError as e:
+            return NewsOutput(
+                ticker=ticker,
+                articles=[],
+                retrieved_at=datetime.now(timezone.utc),
+                status="no_data",
+                data_source="web_search",
+                error_message=str(e),
+            )
+
+    def _parse_web_results(self, results: list[dict]) -> list[NewsArticle]:
+        """
+        Parse web search results into NewsArticle objects.
+
+        Args:
+            results: List of search result dictionaries
+
+        Returns:
+            List of NewsArticle objects
+        """
+        articles = []
+        for result in results:
+            try:
+                # Parse published date if available, default to now
+                published_str = result.get("published_at", "")
+                if published_str:
+                    try:
+                        published_at = datetime.fromisoformat(published_str.replace("Z", "+00:00"))
+                    except ValueError:
+                        published_at = datetime.now(timezone.utc)
+                else:
+                    published_at = datetime.now(timezone.utc)
+
+                articles.append(
+                    NewsArticle(
+                        headline=result.get("title", ""),
+                        source=result.get("source", "Web Search"),
+                        published_at=published_at,
+                        summary=result.get("snippet", result.get("summary", "")),
+                        url=result.get("url", ""),
+                        sentiment=ArticleSentiment.NEUTRAL,
+                    )
+                )
+            except (ValueError, KeyError):
+                continue
+
+        return articles
 
     async def _fetch_from_source(
         self, ticker: str, source: SourceConfig
