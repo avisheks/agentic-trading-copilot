@@ -360,3 +360,180 @@ class TestHTMLReportMultiple:
 
         assert "AAPL" in html
         assert "GOOGL" in html
+
+
+# Import RedditPost and RedditOutput for Reddit tests
+from trading_copilot.models import RedditPost, RedditOutput
+
+
+def create_sample_reddit_post(
+    title: str = "Test Reddit post",
+    subreddit: str = "wallstreetbets",
+    score: int = 100,
+    num_comments: int = 50,
+    sentiment: ArticleSentiment = ArticleSentiment.NEUTRAL,
+) -> RedditPost:
+    """Create a sample Reddit post for testing."""
+    return RedditPost(
+        title=title,
+        subreddit=subreddit,
+        score=score,
+        num_comments=num_comments,
+        url=f"https://reddit.com/r/{subreddit}/comments/abc123",
+        created_at=datetime.now(timezone.utc),
+        snippet="Test snippet",
+        sentiment=sentiment,
+    )
+
+
+def create_sample_sentiment_result_with_reddit(
+    ticker: str = "AAPL",
+    sentiment: Sentiment = Sentiment.BULLISH,
+    reddit_posts: list[RedditPost] | None = None,
+    reddit_status: str = "success",
+    missing_components: list[AgentType] | None = None,
+) -> SentimentResult:
+    """Create a sample sentiment result with Reddit data for testing."""
+    if reddit_posts is None:
+        reddit_posts = [
+            create_sample_reddit_post("Bullish on AAPL 🚀", "wallstreetbets", 500, 100, ArticleSentiment.POSITIVE),
+            create_sample_reddit_post("AAPL earnings look good", "stocks", 200, 50, ArticleSentiment.POSITIVE),
+            create_sample_reddit_post("Concerned about AAPL", "investing", 150, 30, ArticleSentiment.NEGATIVE),
+        ]
+
+    reddit_output = RedditOutput(
+        ticker=ticker,
+        posts=reddit_posts,
+        retrieved_at=datetime.now(timezone.utc),
+        status=reddit_status,
+        data_source="web_search",
+    )
+
+    news_output = NewsOutput(
+        ticker=ticker,
+        articles=[create_sample_news_article()],
+        retrieved_at=datetime.now(timezone.utc),
+        status="success",
+    )
+
+    return SentimentResult(
+        ticker=ticker,
+        sentiment=sentiment,
+        confidence=ConfidenceLevel.HIGH,
+        signals=[],
+        summary="Test summary",
+        key_factors=[],
+        risks=[],
+        disclaimer="Test disclaimer",
+        analyzed_at=datetime.now(timezone.utc),
+        aggregated_report=AggregatedReport(
+            ticker=ticker,
+            news=news_output,
+            earnings=None,
+            macro=None,
+            reddit=reddit_output,
+            aggregated_at=datetime.now(timezone.utc),
+            missing_components=missing_components or [],
+        ),
+    )
+
+
+class TestHTMLReportRedditSection:
+    """Tests for Reddit section in HTML reports."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.generator = HTMLReportGenerator()
+
+    def test_reddit_section_displayed_when_data_available(self):
+        """Reddit section is displayed when Reddit data is available."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        assert "Reddit Sentiment" in html
+        assert "reddit-sentiment" in html
+
+    def test_reddit_section_shows_post_count(self):
+        """Reddit section shows total post count."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        assert "Total Posts" in html
+        assert ">3<" in html  # 3 posts
+
+    def test_reddit_section_shows_sentiment_breakdown(self):
+        """Reddit section shows positive/negative/neutral counts."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        assert "Positive" in html
+        assert "Negative" in html
+        assert "Neutral" in html
+
+    def test_reddit_posts_rendered_as_hyperlinks(self):
+        """Reddit post titles are rendered as hyperlinks."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        # Check for anchor tags with Reddit URLs
+        assert 'href="https://reddit.com/r/' in html
+        assert "Bullish on AAPL" in html
+
+    def test_reddit_posts_show_subreddit_and_score(self):
+        """Reddit posts show subreddit name and score."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        assert "r/wallstreetbets" in html
+        assert "Score:" in html
+        assert "comments" in html
+
+    def test_reddit_summary_in_executive_summary(self):
+        """Reddit summary appears in executive summary when data available."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        assert "Reddit Sentiment" in html
+        assert "Reddit discussions" in html
+
+    def test_missing_reddit_shows_error_indicator(self):
+        """Missing Reddit data shows error indicator."""
+        result = create_sample_sentiment_result_with_reddit(
+            reddit_posts=[],
+            reddit_status="error",
+            missing_components=[AgentType.REDDIT],
+        )
+        # Update the reddit output to have error status
+        result.aggregated_report.reddit.error_message = "Connection failed"
+        
+        html = self.generator.generate(result)
+
+        assert "Reddit Data Unavailable" in html
+
+    def test_reddit_no_data_status_handled(self):
+        """Reddit with no_data status is handled gracefully."""
+        result = create_sample_sentiment_result_with_reddit(
+            reddit_posts=[],
+            reddit_status="no_data",
+        )
+        result.aggregated_report.reddit.error_message = "No discussions found"
+        
+        html = self.generator.generate(result)
+
+        assert "Reddit Sentiment" in html or "No discussions found" in html
+
+    def test_reddit_section_not_shown_when_no_reddit_data(self):
+        """Reddit section not shown when reddit is None and not in missing_components."""
+        result = create_sample_sentiment_result()  # No Reddit data
+        html = self.generator.generate(result)
+
+        # Should not have Reddit section since reddit is None and not missing
+        assert "reddit-sentiment" not in html
+
+    def test_reddit_posts_have_correct_sentiment_styling(self):
+        """Reddit posts have correct CSS class based on sentiment."""
+        result = create_sample_sentiment_result_with_reddit()
+        html = self.generator.generate(result)
+
+        # Check for sentiment-based styling classes
+        assert 'class="article-item positive"' in html or 'class="article-item negative"' in html

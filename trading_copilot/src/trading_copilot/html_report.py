@@ -321,6 +321,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </div>
             {% endif %}
             
+            {% if reddit_summary %}
+            <div style="margin-top: 15px; padding: 15px; background: #fff5f5; border-left: 3px solid #fc8181; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    🗣️ Reddit Sentiment
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    {{ reddit_summary }}
+                </div>
+            </div>
+            {% endif %}
+            
             {% if result.key_factors %}
             <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
             <ul class="factors-list">
@@ -419,6 +430,55 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </section>
         {% endif %}
 
+        {% if show_reddit_section %}
+        <section class="section" id="reddit-sentiment">
+            <h2 class="section-title">Reddit Sentiment</h2>
+            {% if missing_reddit %}
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Reddit Data Unavailable</div>
+                <div class="missing-section-text">{{ missing_reddit_message }}</div>
+            </div>
+            {% elif reddit_posts %}
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">{{ reddit_posts | length }}</div>
+                    <div class="stat-label">Total Posts</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">{{ reddit_positive_count }}</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">{{ reddit_negative_count }}</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">{{ reddit_neutral_count }}</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Discussions ({{ reddit_posts | length }} posts)</h3>
+            <ul class="article-list">
+                {% for post in reddit_posts %}
+                <li class="article-item {{ post.sentiment.value }}">
+                    <div class="article-headline">
+                        <a href="{{ post.url }}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            {{ post.title }}
+                        </a>
+                    </div>
+                    <div class="article-meta">
+                        r/{{ post.subreddit }} • Score: {{ post.score }} • {{ post.num_comments }} comments
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p style="color: #718096;">No recent Reddit discussions found for analysis.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+
         <section class="section" id="sentiment-recommendation">
             <h2 class="section-title">Sentiment Recommendation</h2>
             {% if result.signals %}
@@ -483,6 +543,14 @@ class HTMLReportGenerator:
             "show_macro_section": False,
             "missing_macro": False,
             "missing_macro_message": "",
+            "show_reddit_section": False,
+            "missing_reddit": False,
+            "missing_reddit_message": "",
+            "reddit_posts": [],
+            "reddit_positive_count": 0,
+            "reddit_negative_count": 0,
+            "reddit_neutral_count": 0,
+            "reddit_summary": "",
         }
 
         # Process news data
@@ -533,6 +601,47 @@ class HTMLReportGenerator:
             )
         elif result.aggregated_report.macro is not None:
             context["show_macro_section"] = True
+
+        # Process Reddit data
+        reddit = result.aggregated_report.reddit
+        if reddit and reddit.posts and reddit.status == "success":
+            context["show_reddit_section"] = True
+            context["reddit_posts"] = reddit.posts
+            context["reddit_positive_count"] = sum(
+                1 for p in reddit.posts if p.sentiment == ArticleSentiment.POSITIVE
+            )
+            context["reddit_negative_count"] = sum(
+                1 for p in reddit.posts if p.sentiment == ArticleSentiment.NEGATIVE
+            )
+            context["reddit_neutral_count"] = (
+                len(reddit.posts) - context["reddit_positive_count"] - context["reddit_negative_count"]
+            )
+            # Generate Reddit summary for executive summary
+            context["reddit_summary"] = self._generate_reddit_summary(
+                reddit.posts,
+                context["reddit_positive_count"],
+                context["reddit_negative_count"],
+                context["reddit_neutral_count"]
+            )
+        elif AgentType.REDDIT in missing:
+            context["show_reddit_section"] = True
+            context["missing_reddit"] = True
+            context["missing_reddit_message"] = (
+                "Reddit data could not be retrieved. The Reddit agent encountered an error during execution."
+            )
+        elif reddit is not None:
+            # Reddit data exists but may have no_data or error status
+            context["show_reddit_section"] = True
+            if reddit.status == "no_data":
+                context["missing_reddit"] = True
+                context["missing_reddit_message"] = (
+                    reddit.error_message or "No Reddit discussions found for this ticker."
+                )
+            elif reddit.status == "error":
+                context["missing_reddit"] = True
+                context["missing_reddit_message"] = (
+                    reddit.error_message or "Reddit data retrieval failed."
+                )
 
         return context
 
@@ -904,6 +1013,76 @@ class HTMLReportGenerator:
                     )
         
         return "".join(rationale_parts)
+
+    def _generate_reddit_summary(
+        self,
+        posts: list,
+        positive_count: int,
+        negative_count: int,
+        neutral_count: int
+    ) -> str:
+        """
+        Generate a summary of Reddit sentiment for the executive summary.
+        
+        Args:
+            posts: List of RedditPost objects
+            positive_count: Number of positive posts
+            negative_count: Number of negative posts
+            neutral_count: Number of neutral posts
+            
+        Returns:
+            HTML-formatted summary string
+        """
+        total = len(posts)
+        if total == 0:
+            return ""
+        
+        # Get unique subreddits
+        subreddits = list(set(p.subreddit for p in posts))
+        subreddit_str = ", ".join(f"r/{s}" for s in subreddits[:3])
+        if len(subreddits) > 3:
+            subreddit_str += f" and {len(subreddits) - 3} more"
+        
+        # Determine dominant sentiment
+        if positive_count > negative_count:
+            dominant = "positive"
+            dominant_count = positive_count
+        elif negative_count > positive_count:
+            dominant = "negative"
+            dominant_count = negative_count
+        else:
+            dominant = "mixed"
+            dominant_count = 0
+        
+        # Build summary
+        summary_parts = []
+        summary_parts.append(
+            f"Analyzed <strong>{total} Reddit discussions</strong> from {subreddit_str}. "
+        )
+        
+        if dominant == "mixed":
+            summary_parts.append(
+                f"Sentiment is <strong>mixed</strong> with {positive_count} positive, "
+                f"{negative_count} negative, and {neutral_count} neutral posts."
+            )
+        else:
+            pct = (dominant_count / total) * 100
+            summary_parts.append(
+                f"Overall sentiment is <strong>{dominant}</strong> ({pct:.0f}% of posts). "
+            )
+        
+        # Cite top posts by engagement
+        top_posts = sorted(posts, key=lambda p: p.score + p.num_comments, reverse=True)[:2]
+        if top_posts:
+            summary_parts.append("<br><br><strong>Top discussions:</strong><br>")
+            for post in top_posts:
+                sentiment_label = post.sentiment.value.lower()
+                summary_parts.append(
+                    f"• <em>\"{post.title[:80]}{'...' if len(post.title) > 80 else ''}\"</em> "
+                    f"(r/{post.subreddit}, {post.score} upvotes, {sentiment_label})<br>"
+                )
+        
+        return "".join(summary_parts)
 
     def _generate_empty_report(self) -> str:
         """Generate an empty report placeholder."""
