@@ -89,14 +89,14 @@ This implementation plan follows an incremental MVP approach, starting with core
     - **Property 12: Sentiment Result Completeness**
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6**
 
-- [-] 6. Create basic console output
-  - [-] 6.1 Implement simple text report generator
+- [x] 6. Create basic console output
+  - [x] 6.1 Implement simple text report generator
     - Create formatted text output with sections
     - Include executive summary, news findings, sentiment
     - Add disclaimer at the end
     - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 7. Checkpoint - MVP with single agent working
+- [x] 7. Checkpoint - MVP with single agent working
   - Ensure all tests pass, ask the user if questions arise.
   - Test with real ticker (e.g., AAPL) and verify news retrieval
 

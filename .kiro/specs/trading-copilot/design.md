@@ -48,6 +48,7 @@ flowchart TB
         NewsAPI[News APIs]
         EarningsAPI[Earnings APIs]
         MacroAPI[Macro APIs]
+        WebSearch[Web Search<br/>Fallback]
     end
     
     subgraph Storage
@@ -65,9 +66,12 @@ flowchart TB
     AgentCoordinator --> |concurrent| EarningsAgent
     AgentCoordinator --> |concurrent| MacroAgent
     
-    NewsAgent --> NewsAPI
-    EarningsAgent --> EarningsAPI
-    MacroAgent --> MacroAPI
+    NewsAgent --> |primary| NewsAPI
+    NewsAgent --> |fallback| WebSearch
+    EarningsAgent --> |primary| EarningsAPI
+    EarningsAgent --> |fallback| WebSearch
+    MacroAgent --> |primary| MacroAPI
+    MacroAgent --> |fallback| WebSearch
     
     NewsAgent --> Aggregator
     EarningsAgent --> Aggregator
@@ -199,6 +203,37 @@ class TickerValidator:
 
 Base interface and specialized implementations for each research domain.
 
+#### Data Source Strategy
+
+Each agent implements a fallback strategy for data retrieval:
+
+1. **Primary**: Use configured API sources (Alpha Vantage, Finnhub, FRED, etc.)
+2. **Fallback**: If API keys are unavailable or API calls fail, use web search to gather information
+
+```mermaid
+flowchart TD
+    A[Agent.research] --> B{API Keys Available?}
+    B -->|Yes| C[Call API]
+    B -->|No| D[Web Search Fallback]
+    C --> E{API Success?}
+    E -->|Yes| F[Parse API Response]
+    E -->|No| D
+    D --> G[Search Web for ticker + topic]
+    G --> H[Parse Search Results]
+    F --> I[Return Output]
+    H --> I
+```
+
+#### Web Search Fallback
+
+When API keys are not configured or API calls fail, agents fall back to web search:
+
+- **NewsAgent**: Searches for `"{ticker} stock news"` and parses results
+- **EarningsAgent**: Searches for `"{ticker} earnings report Q{quarter}"` and `"{ticker} earnings call transcript"`
+- **MacroAgent**: Searches for `"{ticker} sector analysis"` and `"{ticker} macro factors"`
+
+The web search results are processed by Claude to extract structured data matching the expected output format.
+
 ```python
 from abc import ABC, abstractmethod
 
@@ -214,6 +249,8 @@ class ResearchAgent(ABC):
         """
         Execute research for the given ticker.
         
+        Uses API sources if available, falls back to web search otherwise.
+        
         Args:
             ticker: Validated stock ticker
             
@@ -226,13 +263,46 @@ class ResearchAgent(ABC):
     def get_agent_type(self) -> AgentType:
         """Return the type of this agent."""
         pass
+    
+    def _has_api_keys(self) -> bool:
+        """Check if required API keys are configured."""
+        pass
+    
+    async def _web_search_fallback(self, ticker: str, query: str) -> list[dict]:
+        """
+        Perform web search as fallback when APIs unavailable.
+        
+        Args:
+            ticker: Stock ticker symbol
+            query: Search query string
+            
+        Returns:
+            List of search result dictionaries
+        """
+        pass
+    
+    def _parse_web_results(self, results: list[dict]) -> ResearchOutput:
+        """Parse web search results into structured output using Claude."""
+        pass
 
 
 class NewsAgent(ResearchAgent):
     """Gathers and analyzes market news."""
     
     async def research(self, ticker: str) -> NewsOutput:
-        """Retrieve news articles from past 14 days."""
+        """
+        Retrieve news articles from past 14 days.
+        
+        Falls back to web search if API keys unavailable.
+        """
+        pass
+    
+    async def _research_via_api(self, ticker: str) -> NewsOutput:
+        """Fetch news using configured API sources."""
+        pass
+    
+    async def _research_via_web_search(self, ticker: str) -> NewsOutput:
+        """Fetch news using web search fallback."""
         pass
     
     def categorize_sentiment(self, article: NewsArticle) -> ArticleSentiment:
@@ -248,7 +318,19 @@ class EarningsAgent(ResearchAgent):
     """Analyzes company earnings data."""
     
     async def research(self, ticker: str) -> EarningsOutput:
-        """Retrieve most recent earnings call data."""
+        """
+        Retrieve most recent earnings call data.
+        
+        Falls back to web search if API keys unavailable.
+        """
+        pass
+    
+    async def _research_via_api(self, ticker: str) -> EarningsOutput:
+        """Fetch earnings using configured API sources."""
+        pass
+    
+    async def _research_via_web_search(self, ticker: str) -> EarningsOutput:
+        """Fetch earnings using web search fallback."""
         pass
     
     def compare_to_expectations(self, actual: EarningsData, expected: AnalystExpectations) -> EarningsComparison:
@@ -260,7 +342,19 @@ class MacroAgent(ResearchAgent):
     """Analyzes macro-economic trends."""
     
     async def research(self, ticker: str) -> MacroOutput:
-        """Analyze macro factors relevant to ticker's sector."""
+        """
+        Analyze macro factors relevant to ticker's sector.
+        
+        Falls back to web search if API keys unavailable.
+        """
+        pass
+    
+    async def _research_via_api(self, ticker: str) -> MacroOutput:
+        """Fetch macro data using configured API sources."""
+        pass
+    
+    async def _research_via_web_search(self, ticker: str) -> MacroOutput:
+        """Fetch macro data using web search fallback."""
         pass
     
     def identify_sector(self, ticker: str) -> Sector:
@@ -503,6 +597,7 @@ class NewsOutput:
     articles: list[NewsArticle]
     retrieved_at: datetime
     status: str  # "success", "partial", "no_data"
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 
@@ -530,6 +625,7 @@ class EarningsOutput:
     comparison: EarningsComparison | None
     retrieved_at: datetime
     status: str
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 
@@ -550,6 +646,7 @@ class MacroOutput:
     opportunities: list[str]
     retrieved_at: datetime
     status: str
+    data_source: str = "api"  # "api" or "web_search"
     error_message: str | None = None
 
 
@@ -806,6 +903,12 @@ class DeliveryResult:
 
 **Validates: Requirements 10.5**
 
+### Property 24: Web Search Fallback
+
+*For any* agent where API keys are not configured or API calls fail, the agent SHALL fall back to web search and return a valid output with the same structure as API-sourced data. The output status SHALL indicate the data source used ("api" or "web_search").
+
+**Validates: Requirements 2.1, 3.1, 4.1**
+
 ## Error Handling
 
 ### Input Validation Errors
@@ -820,10 +923,12 @@ class DeliveryResult:
 
 | Error | Cause | Handling |
 |-------|-------|----------|
-| `APIConnectionError` | Network failure to data source | Retry with exponential backoff (3 attempts), then mark agent as failed |
-| `APIRateLimitError` | Rate limit exceeded | Wait and retry, fall back to cached data if available |
-| `APIAuthenticationError` | Invalid API credentials | Log error, mark agent as failed, continue with other agents |
-| `DataParseError` | Unexpected API response format | Log raw response, return partial data if possible |
+| `APIConnectionError` | Network failure to data source | Retry with exponential backoff (3 attempts), then fall back to web search |
+| `APIRateLimitError` | Rate limit exceeded | Wait and retry, fall back to web search if retries exhausted |
+| `APIAuthenticationError` | Invalid or missing API credentials | Fall back to web search immediately |
+| `APIKeyMissingError` | API key environment variable not set | Fall back to web search immediately |
+| `DataParseError` | Unexpected API response format | Log raw response, fall back to web search |
+| `WebSearchError` | Web search failed | Log error, mark agent as failed, continue with other agents |
 
 ### Agent Errors
 
