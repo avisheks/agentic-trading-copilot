@@ -140,7 +140,12 @@ class NewsAgent(ResearchAgent):
         """
         try:
             query = f"{ticker} stock news"
-            results = await self._web_search_fallback(ticker, query)
+            results = await self._web_search_fallback(
+                ticker,
+                query,
+                start_date=start_date,
+                end_date=end_date,
+            )
 
             if not results:
                 return NewsOutput(

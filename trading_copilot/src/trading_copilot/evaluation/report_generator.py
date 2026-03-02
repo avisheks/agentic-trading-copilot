@@ -459,6 +459,211 @@ class EvaluationReportGenerator:
         """
         context = self._build_context(metrics, results, config)
         return self._template.render(**context)
+    
+    def generate_multi(
+        self,
+        ticker_reports: list[tuple[EvaluationMetrics, list[EpochResult], EvaluationConfig]],
+    ) -> str:
+        """Generate a multi-ticker evaluation report.
+        
+        Args:
+            ticker_reports: List of tuples (metrics, results, config) for each ticker
+            
+        Returns:
+            HTML string with summary table and detailed reports
+        """
+        if not ticker_reports:
+            return self._generate_empty_report()
+        
+        # Generate summary table
+        summary_table = self._generate_summary_table(ticker_reports)
+        
+        # Generate individual detailed reports with IDs and back-to-top links
+        detailed_reports = []
+        for metrics, results, config in ticker_reports:
+            report = self.generate(metrics, results, config)
+            # Wrap report with ID anchor and add back-to-top link
+            wrapped_report = f'''
+<div id="ticker-{config.ticker}" style="margin-bottom: 40px;">
+    {report}
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>'''
+            detailed_reports.append(wrapped_report)
+        
+        # Combine with proper structure
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Report - Multi-Ticker Analysis</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }}
+        html {{
+            scroll-behavior: smooth;
+        }}
+    </style>
+</head>
+<body>
+    <div id="top"></div>
+    {summary_table}
+    <div style="margin: 40px 0;"></div>
+    {"".join(detailed_reports)}
+</body>
+</html>"""
+
+    def _generate_summary_table(
+        self,
+        ticker_reports: list[tuple[EvaluationMetrics, list[EpochResult], EvaluationConfig]],
+    ) -> str:
+        """Generate HTML summary table for multiple tickers."""
+        timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+        
+        table_rows = []
+        for metrics, results, config in ticker_reports:
+            # Get metric styling
+            accuracy_class = "good" if metrics.accuracy >= 0.7 else ("warning" if metrics.accuracy >= 0.5 else "bad")
+            
+            table_rows.append(f"""
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-{config.ticker}" style="color: #2d3748; text-decoration: none; font-weight: bold;">{config.ticker}</a></td>
+                    <td class="metric-{accuracy_class}">{metrics.accuracy * 100:.1f}%</td>
+                    <td>{metrics.precision * 100:.1f}%</td>
+                    <td>{metrics.recall * 100:.1f}%</td>
+                    <td>{metrics.f1_score * 100:.1f}%</td>
+                    <td class="text-center">{metrics.completed_epochs}/{metrics.total_epochs}</td>
+                </tr>
+            """)
+        
+        return f"""
+<div style="max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
+    <style>
+        .summary-header {{
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        .summary-title {{
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }}
+        .summary-timestamp {{
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }}
+        .summary-content {{
+            padding: 30px;
+        }}
+        .summary-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }}
+        .summary-table th {{
+            background-color: #edf2f7;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #cbd5e0;
+        }}
+        .summary-table td {{
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }}
+        .summary-table tr:hover {{
+            background-color: #f7fafc;
+        }}
+        .ticker-cell {{
+            font-size: 1.1rem;
+        }}
+        .text-center {{
+            text-align: center;
+        }}
+        .metric-good {{ color: #38a169; font-weight: bold; }}
+        .metric-warning {{ color: #dd6b20; font-weight: bold; }}
+        .metric-bad {{ color: #e53e3e; font-weight: bold; }}
+        .total-count {{
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+            text-align: center;
+            color: #4a5568;
+        }}
+        .section-divider {{
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }}
+    </style>
+    
+    <header class="summary-header">
+        <div class="summary-title">Evaluation Summary</div>
+        <div class="summary-timestamp">Generated: {timestamp}</div>
+    </header>
+    
+    <div class="summary-content">
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th class="text-center">Epochs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {''.join(table_rows)}
+            </tbody>
+        </table>
+        
+        <div class="total-count">
+            <strong>Total tickers evaluated: {len(ticker_reports)}</strong>
+        </div>
+    </div>
+    
+    <div class="section-divider">
+        Detailed Evaluation by Ticker
+    </div>
+</div>
+"""
+
+    def _generate_empty_report(self) -> str:
+        """Generate an empty report placeholder."""
+        return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluation Report</title>
+</head>
+<body>
+    <div style="text-align: center; padding: 50px; font-family: sans-serif;">
+        <h1>No Results Available</h1>
+        <p>No evaluation results were provided for report generation.</p>
+    </div>
+</body>
+</html>"""
 
     def _build_context(
         self,

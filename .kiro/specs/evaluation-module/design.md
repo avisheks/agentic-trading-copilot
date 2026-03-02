@@ -259,11 +259,11 @@ class MetricsCalculator:
 
 ### EvaluationReportGenerator
 
-Generates HTML evaluation reports.
+Generates HTML evaluation reports matching the trading-copilot report styling.
 
 ```python
 class EvaluationReportGenerator:
-    """Generates HTML reports for evaluation results."""
+    """Generates HTML reports for evaluation results using trading-copilot styling."""
     
     def generate(
         self, 
@@ -274,10 +274,122 @@ class EvaluationReportGenerator:
         """
         Generate HTML report with metrics summary and per-epoch details.
         
+        The report follows the trading-copilot report format with:
+        - Gradient header (linear-gradient from #1a365d to #2c5282)
+        - Summary table with key metrics at the top
+        - Sentiment badges (bullish=green, bearish=red)
+        - Confidence badges (high=blue, medium=yellow, low=gray)
+        - "Detailed Analysis by Epoch" section divider
+        - Per-epoch details with back-to-top navigation
+        - Mobile-responsive design with @media queries
+        
         Returns:
             HTML string for the evaluation report
         """
+    
+    def _generate_summary_section(
+        self,
+        metrics: EvaluationMetrics,
+        results: list[EpochResult],
+        config: EvaluationConfig,
+    ) -> str:
+        """
+        Generate the summary section with metrics table.
+        
+        Summary table columns:
+        - Metric name (Accuracy, Precision, Recall, F1 Score)
+        - Value (percentage with color-coded badge)
+        - Epochs completed count
+        - Confusion matrix summary
+        """
+    
+    def _generate_epoch_details(
+        self,
+        results: list[EpochResult],
+    ) -> str:
+        """
+        Generate detailed per-epoch sections with anchor IDs.
+        
+        Each epoch section includes:
+        - Epoch number as anchor ID for navigation
+        - Look-back and prediction date ranges
+        - Predicted sentiment with confidence badge
+        - Actual outcome with price change percentage
+        - Correctness indicator (✓ or ✗)
+        - Back-to-top navigation link
+        """
 ```
+
+### Report Format Specification
+
+The evaluation report follows the trading-copilot report format for visual consistency:
+
+#### Header Section
+- Gradient background: `linear-gradient(135deg, #1a365d 0%, #2c5282 100%)`
+- Title: "Evaluation Report"
+- Ticker symbol in large font
+- Generation timestamp
+
+#### Summary Section
+The summary section displays key metrics in a styled table format:
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| Accuracy | XX.X% | Color-coded badge |
+| Precision | XX.X% | Color-coded badge |
+| Recall | XX.X% | Color-coded badge |
+| F1 Score | XX.X% | Color-coded badge |
+| Epochs | X/Y completed | - |
+
+Metric badges use color coding:
+- Green (≥70%): Good performance
+- Yellow (50-69%): Warning
+- Red (<50%): Poor performance
+
+#### Confusion Matrix Section
+Displays the 2x2 confusion matrix with:
+- True Positive (TP): Green background
+- True Negative (TN): Green background
+- False Positive (FP): Red background
+- False Negative (FN): Red background
+
+#### Confidence Breakdown Section
+Shows count of predictions by confidence level:
+- HIGH: Blue badge (`#bee3f8`)
+- MEDIUM: Yellow badge (`#fefcbf`)
+- LOW: Gray badge (`#e2e8f0`)
+
+#### Section Divider
+A styled divider matching trading-copilot format:
+```css
+.section-divider {
+    background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+    color: white;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+    padding: 20px;
+}
+```
+Text: "Detailed Analysis by Epoch"
+
+#### Per-Epoch Details
+Each epoch displayed as a card with:
+- Anchor ID: `#epoch-{number}` for navigation
+- Look-back period dates
+- Prediction period dates
+- Predicted sentiment badge (bullish=green, bearish=red)
+- Confidence badge (high=blue, medium=yellow, low=gray)
+- Actual outcome badge with price change percentage
+- Correctness indicator: ✓ (green) or ✗ (red)
+- Status badge (complete, no_data, incomplete, failed)
+- Back-to-top link: `<a href="#top">↑ Back to Summary</a>`
+
+#### Mobile Responsiveness
+The report includes `@media` queries for screens ≤768px:
+- Reduced padding and font sizes
+- Stacked layout for metrics grid
+- Simplified epoch table columns
 
 ## Data Models
 
@@ -478,10 +590,15 @@ class EvaluationReport:
 
 *For any* generated evaluation report:
 - The HTML SHALL be valid and well-formed
-- The report SHALL contain all computed metrics (precision, recall, F1, accuracy)
+- The report SHALL contain a gradient header with ticker and timestamp
+- The report SHALL contain all computed metrics (precision, recall, F1, accuracy) in a summary table
+- The report SHALL contain a confusion matrix with color-coded cells
+- The report SHALL contain a confidence breakdown section
+- The report SHALL contain a "Detailed Analysis by Epoch" section divider
 - The report SHALL contain per-epoch details with prediction, actual outcome, and correctness
 - The report SHALL contain date ranges for each epoch
-- The report SHALL contain a summary section with overall accuracy and confidence breakdown
+- The report SHALL contain back-to-top navigation links for each epoch section
+- The report SHALL be mobile-responsive with @media queries for screens ≤768px
 
 **Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5**
 
@@ -571,7 +688,7 @@ The Evaluation Module requires both unit tests and property-based tests for comp
 | P8: Fault Tolerance | Inject failures in K epochs, verify N-K complete |
 | P9: Epoch Count Validation | Generate N values, verify acceptance/rejection |
 | P10: Metrics Calculation | Generate confusion matrices, verify formulas |
-| P11: Report Completeness | Generate evaluation results, verify HTML contains required sections |
+| P11: Report Completeness | Generate evaluation results, verify HTML contains required sections including gradient header, summary table, confusion matrix, section divider, per-epoch details with back-to-top links, and @media queries |
 | P12: Config Validation | Generate invalid configs, verify ConfigurationError raised |
 
 ### Unit Test Coverage

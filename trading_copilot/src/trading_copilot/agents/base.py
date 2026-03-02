@@ -2,6 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
+from datetime import date
 from typing import Any
 
 from trading_copilot.models import AgentType, SourceConfig
@@ -101,29 +102,44 @@ class ResearchAgent(ABC):
                 return True
         return False
 
-    async def _web_search_fallback(self, ticker: str, query: str) -> list[dict]:
+    async def _web_search_fallback(
+        self,
+        ticker: str,
+        query: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[dict]:
         """
         Perform web search using multiple RSS feeds.
 
         Fetches from Google News, CNBC, WSJ, and Bloomberg RSS feeds.
+        Supports date filtering for historical data retrieval.
 
         Args:
             ticker: Stock ticker symbol
             query: Search query string
+            start_date: Optional start date for filtering articles (inclusive)
+            end_date: Optional end date for filtering articles (inclusive)
 
         Returns:
             List of search result dictionaries with title, link, published_at, snippet
         """
         import httpx
         from bs4 import BeautifulSoup
-        from datetime import datetime, timezone
+        from datetime import datetime, timezone, date
         
         all_results = []
+        
+        # Build date filter for Google News RSS
+        date_filter = ""
+        if start_date and end_date:
+            # Google News RSS supports after: and before: operators
+            date_filter = f"+after:{start_date.isoformat()}+before:{end_date.isoformat()}"
         
         # Define RSS feed sources
         rss_feeds = [
             {
-                "url": f"https://news.google.com/rss/search?q={ticker}+stock&hl=en-US&gl=US&ceid=US:en",
+                "url": f"https://news.google.com/rss/search?q={ticker}+stock{date_filter}&hl=en-US&gl=US&ceid=US:en",
                 "source_name": "Google News",
                 "limit": 30
             },

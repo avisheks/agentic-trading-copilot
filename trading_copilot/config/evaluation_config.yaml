@@ -1,0 +1,63 @@
+# Evaluation Configuration for Trading Copilot
+# This file controls the evaluation process for backtesting sentiment predictions
+
+# Evaluation Parameters
+evaluation:
+  # Number of historical epochs to evaluate (each epoch = 2 weeks lookback + 1 week prediction)
+  num_epochs: 5
+  
+  # Number of runs per (ticker, epoch) combination for statistical analysis
+  # Higher values provide more reliable statistics but increase execution time
+  runs_per_epoch: 5
+  
+  # Maximum number of parallel evaluation threads
+  # Higher values speed up evaluation but use more system resources
+  max_parallelism: 3
+  
+  # Tickers to evaluate (leave empty to use all tickers from app_config.yaml)
+  # Example: ['AAPL', 'MSFT', 'GOOGL']
+  tickers: []
+  
+  # Days between epochs (default: 21 days = ~3 weeks)
+  # This determines how far apart historical evaluation periods are
+  epoch_spacing_days: 21
+  
+  # Lookback period in days (default: 14 days = 2 weeks)
+  # Historical data period for sentiment analysis
+  lookback_days: 14
+  
+  # Prediction period in days (default: 7 days = 1 week)
+  # Forward-looking period to validate predictions
+  prediction_days: 7
+
+# Report Configuration
+report:
+  # Report format: 'html' or 'text'
+  format: html
+  
+  # Output directory for evaluation reports
+  output_directory: ./reports
+  
+  # Include individual run details in report (vs only aggregated statistics)
+  include_individual_runs: false
+  
+  # Confidence threshold for metrics (0.0 to 1.0)
+  # Used to filter low-confidence predictions
+  confidence_threshold: 0.0
+  
+  # Show detailed epoch breakdown in report
+  show_epoch_details: true
+  
+  # Show statistical measures (mean, std-dev, min, max)
+  show_statistics: true
+
+# Logging Configuration
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+  
+  # Log evaluation progress
+  show_progress: true
+  
+  # Log individual run results
+  log_individual_runs: false

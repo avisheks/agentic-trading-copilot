@@ -28,21 +28,29 @@ from trading_copilot.evaluation.outcome_fetcher import OutcomeFetcher
 
 
 async def run_evaluation(
-    ticker: str = "AAPL",
+    tickers: list[str] = None,
     num_epochs: int = 5,
     max_parallelism: int = 2,
 ) -> None:
-    """Run end-to-end evaluation and generate report.
+    """Run end-to-end evaluation and generate consolidated report.
     
     Args:
-        ticker: Stock ticker to evaluate
+        tickers: List of stock tickers to evaluate (reads from config if None)
         num_epochs: Number of epochs to run (default 5 for faster demo)
         max_parallelism: Max concurrent epoch executions
     """
+    # Load tickers from config if not provided
+    if tickers is None:
+        app_config_path = Path(__file__).parent.parent / "config" / "app_config.yaml"
+        import yaml
+        with open(app_config_path, 'r') as f:
+            app_config = yaml.safe_load(f)
+            tickers = app_config.get('tickers', ['AAPL'])
+    
     print(f"\n{'='*60}")
     print(f"Trading Copilot Evaluation Module")
     print(f"{'='*60}")
-    print(f"Ticker: {ticker}")
+    print(f"Tickers: {', '.join(tickers)}")
     print(f"Epochs: {num_epochs}")
     print(f"Max Parallelism: {max_parallelism}")
     print(f"{'='*60}\n")
@@ -75,77 +83,73 @@ async def run_evaluation(
         max_parallelism=max_parallelism,
     )
     
-    # Create evaluation config
-    eval_config = EvaluationConfig(
-        ticker=ticker,
-        num_epochs=num_epochs,
-        max_parallelism=max_parallelism,
-    )
+    # Run evaluations for all tickers
+    print(f"Running evaluation for {len(tickers)} tickers across {num_epochs} epochs each...")
+    print("This may take several minutes...\n")
     
-    # Run evaluation
-    print(f"Running evaluation for {ticker} across {num_epochs} epochs...")
-    print("This may take a few minutes...\n")
+    ticker_reports = []
     
     try:
-        report = await evaluation_runner.run(eval_config)
+        for ticker in tickers:
+            print(f"\n{'='*60}")
+            print(f"Evaluating {ticker}...")
+            print(f"{'='*60}")
+            
+            # Create evaluation config for this ticker
+            eval_config = EvaluationConfig(
+                ticker=ticker,
+                num_epochs=num_epochs,
+                max_parallelism=max_parallelism,
+            )
+            
+            try:
+                report = await evaluation_runner.run(eval_config)
+                
+                # Store for consolidated report
+                ticker_reports.append((report.metrics, report.epoch_results, eval_config))
+                
+                # Print summary
+                print(f"\nTicker: {report.ticker}")
+                print(f"Completed: {report.metrics.completed_epochs}/{report.metrics.total_epochs} epochs")
+                print(f"Accuracy: {report.metrics.accuracy * 100:.1f}%")
+                
+                if report.metrics.warning:
+                    print(f"⚠️  Warning: {report.metrics.warning}")
+                    
+            except Exception as e:
+                print(f"❌ Evaluation failed for {ticker}: {e}")
+                continue
         
-        # Print summary
+        if not ticker_reports:
+            print("\n❌ No successful evaluations to generate report")
+            return
+        
+        # Generate consolidated multi-ticker report
         print(f"\n{'='*60}")
-        print("EVALUATION RESULTS")
+        print("GENERATING CONSOLIDATED REPORT")
         print(f"{'='*60}")
-        print(f"Ticker: {report.ticker}")
-        print(f"Total Epochs: {report.metrics.total_epochs}")
-        print(f"Completed Epochs: {report.metrics.completed_epochs}")
-        print(f"\nMetrics:")
-        print(f"  Accuracy:  {report.metrics.accuracy * 100:.1f}%")
-        print(f"  Precision: {report.metrics.precision * 100:.1f}%")
-        print(f"  Recall:    {report.metrics.recall * 100:.1f}%")
-        print(f"  F1 Score:  {report.metrics.f1_score * 100:.1f}%")
         
-        print(f"\nConfusion Matrix:")
-        cm = report.metrics.confusion_matrix
-        print(f"  True Positive:  {cm.true_positive}")
-        print(f"  False Positive: {cm.false_positive}")
-        print(f"  True Negative:  {cm.true_negative}")
-        print(f"  False Negative: {cm.false_negative}")
+        consolidated_html = report_generator.generate_multi(ticker_reports)
         
-        if report.metrics.warning:
-            print(f"\n⚠️  Warning: {report.metrics.warning}")
-        
-        # Save HTML report
+        # Save consolidated HTML report
         reports_dir = Path(__file__).parent.parent / "reports"
         reports_dir.mkdir(exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        report_path = reports_dir / f"evaluation_report_{ticker}_{timestamp}.html"
+        report_path = reports_dir / f"evaluation_report_multi_{timestamp}.html"
         
         with open(report_path, "w") as f:
-            f.write(report.html_content)
+            f.write(consolidated_html)
         
         print(f"\n{'='*60}")
-        print(f"HTML report saved to: {report_path}")
+        print(f"Consolidated HTML report saved to: {report_path}")
         print(f"{'='*60}\n")
         
-        # Print per-epoch summary
-        print("Per-Epoch Results:")
+        # Print summary for all tickers
+        print("Summary for All Tickers:")
         print("-" * 80)
-        for result in report.epoch_results:
-            status_icon = {
-                "complete": "✓",
-                "no_data": "○",
-                "incomplete": "△",
-                "failed": "✗",
-            }.get(result.status.value, "?")
-            
-            if result.status.value == "complete":
-                correct_icon = "✓" if result.is_correct else "✗"
-                pred = result.predicted_sentiment.value if result.predicted_sentiment else "N/A"
-                actual = result.actual_outcome.direction.value if result.actual_outcome else "N/A"
-                print(f"  Epoch {result.epoch_number}: [{status_icon}] Predicted: {pred:8} | Actual: {actual:8} | {correct_icon}")
-            else:
-                print(f"  Epoch {result.epoch_number}: [{status_icon}] Status: {result.status.value}")
-                if result.error_message:
-                    print(f"           Error: {result.error_message[:60]}...")
+        for metrics, results, config in ticker_reports:
+            print(f"  {config.ticker}: {metrics.accuracy * 100:.1f}% accuracy ({metrics.completed_epochs}/{metrics.total_epochs} epochs)")
         
     except Exception as e:
         print(f"\n❌ Evaluation failed: {e}")
@@ -158,14 +162,14 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Run Trading Copilot evaluation")
-    parser.add_argument("--ticker", default="AAPL", help="Stock ticker to evaluate")
+    parser.add_argument("--tickers", nargs="+", help="Stock tickers to evaluate (default: from config)")
     parser.add_argument("--epochs", type=int, default=5, help="Number of epochs")
     parser.add_argument("--parallelism", type=int, default=2, help="Max parallel epochs")
     
     args = parser.parse_args()
     
     asyncio.run(run_evaluation(
-        ticker=args.ticker,
+        tickers=args.tickers,
         num_epochs=args.epochs,
         max_parallelism=args.parallelism,
     ))

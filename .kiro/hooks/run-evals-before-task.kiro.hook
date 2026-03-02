@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Run Evals Before Task",
+  "description": "Reminds to run the evaluation suite before starting any spec task to establish baseline metrics",
+  "version": "1",
+  "when": {
+    "type": "preTaskExecution"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before implementing this task, run the evaluation suite to establish baseline metrics: trading_copilot/.venv/bin/python trading_copilot/scripts/run_evaluation.py. Record the current accuracy and other metrics. Only proceed with implementation if the change maintains or improves these metrics."
+  }
+}

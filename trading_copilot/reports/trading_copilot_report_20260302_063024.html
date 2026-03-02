@@ -1,0 +1,4076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - Multi-Ticker Analysis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div id="top"></div>
+    
+<div style="max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden;">
+    <style>
+        .summary-header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .summary-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .summary-timestamp {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .summary-content {
+            padding: 30px;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .summary-table th {
+            background-color: #edf2f7;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            border-bottom: 2px solid #cbd5e0;
+        }
+        .summary-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .summary-table tr:hover {
+            background-color: #f7fafc;
+        }
+        .ticker-cell {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2d3748;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .signal-cell {
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .total-count {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 8px;
+            text-align: center;
+            color: #4a5568;
+        }
+        .section-divider {
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        @media (max-width: 768px) {
+            .summary-table {
+                font-size: 0.85rem;
+            }
+            .summary-table th, .summary-table td {
+                padding: 10px 5px;
+            }
+            .signal-cell {
+                display: none;
+            }
+            .summary-table th:last-child {
+                display: none;
+            }
+        }
+    </style>
+    
+    <header class="summary-header">
+        <div class="summary-title">Trading Copilot Summary</div>
+        <div class="summary-timestamp">Generated: 2026-03-02 14:30 UTC</div>
+    </header>
+    
+    <div class="summary-content">
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Sentiment</th>
+                    <th>Confidence</th>
+                    <th class="text-center">News</th>
+                    <th>Key Signal</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-AAPL" style="color: #2d3748; text-decoration: none;">AAPL</a></td>
+                    <td><span class="sentiment-badge sentiment-bullish">BULLISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">18</td>
+                    <td class="signal-cell">📈 Based on 18 news articles: 11 positive, 1 negative, 6 neutral.</td>
+                </tr>
+            
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-MSFT" style="color: #2d3748; text-decoration: none;">MSFT</a></td>
+                    <td><span class="sentiment-badge sentiment-bullish">BULLISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">22</td>
+                    <td class="signal-cell">📈 Based on 22 news articles: 14 positive, 2 negative, 6 neutral.</td>
+                </tr>
+            
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-GOOGL" style="color: #2d3748; text-decoration: none;">GOOGL</a></td>
+                    <td><span class="sentiment-badge sentiment-bullish">BULLISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">21</td>
+                    <td class="signal-cell">📈 Based on 21 news articles: 14 positive, 1 negative, 6 neutral.</td>
+                </tr>
+            
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-SNPS" style="color: #2d3748; text-decoration: none;">SNPS</a></td>
+                    <td><span class="sentiment-badge sentiment-bullish">BULLISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">19</td>
+                    <td class="signal-cell">📈 Based on 19 news articles: 8 positive, 2 negative, 9 neutral.</td>
+                </tr>
+            
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-CRWV" style="color: #2d3748; text-decoration: none;">CRWV</a></td>
+                    <td><span class="sentiment-badge sentiment-bearish">BEARISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">15</td>
+                    <td class="signal-cell">📉 Based on 15 news articles: 2 positive, 5 negative, 8 neutral.</td>
+                </tr>
+            
+                <tr>
+                    <td class="ticker-cell"><a href="#ticker-UUUU" style="color: #2d3748; text-decoration: none;">UUUU</a></td>
+                    <td><span class="sentiment-badge sentiment-bullish">BULLISH</span></td>
+                    <td><span class="confidence-badge confidence-high">HIGH</span></td>
+                    <td class="text-center">12</td>
+                    <td class="signal-cell">📈 Based on 12 news articles: 6 positive, 1 negative, 5 neutral.</td>
+                </tr>
+            
+            </tbody>
+        </table>
+        
+        <div class="total-count">
+            <strong>Total tickers analyzed: 6</strong>
+        </div>
+    </div>
+    
+    <div class="section-divider">
+        Detailed Analysis by Ticker
+    </div>
+</div>
+
+    <div style="margin: 40px 0;"></div>
+    
+<div id="ticker-AAPL" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - AAPL</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">AAPL</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bullish">
+                    BULLISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for AAPL is bullish for the next 1-2 weeks. News sentiment is positive.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BULLISH sentiment is based on analysis of 18 recent news articles, with 11 (61%) showing positive sentiment, 1 (6%) negative, and 6 (33%) neutral.</strong><br><br><strong>Key Positive Indicators:</strong><br>1. <em>"Apple Inc. $AAPL Stock Position Lowered by Townsquare Capital LLC - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br>2. <em>"Apple Inc. $AAPL Stock Position Raised by Argent Advisors Inc. - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br>3. <em>"Welch & Forbes LLC Lowers Stock Holdings in Apple Inc. $AAPL - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br><br><strong>Note:</strong> Despite the overall bullish sentiment, 1 articles expressed concerns, including:<br>• <em>"Apple Stock: Is AAPL Underperforming the Technology Sector? - Yahoo Finance"</em> (Yahoo Finance)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Positive news coverage (11/18 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">18</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">11</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (18 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiwgFBVV95cUxOdWM2eDdwNVdENy00Qk1FMnByRnZOcm1qTFdFa1VHUnhROWN2S0RpWU9GY1E0ZU5nbFRvQ1pOMU85eWtvdHVkUmRMRnFZQWp6ZGdNb3VOLVdLVlRzVm02dnRScjRtV1FHU2J4MjY5MHBzSUxralcwTWtaZ0tHZkMxRXBFN3ZmLXg4U0hrRm5UTmtOakRGc0NDNXcteHRiUU1wbUZpVzh5X3pjWS1hMGNjMW42S1VwVFQ5OWF2dkVuc1VwQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Inc. $AAPL Stock Position Lowered by Townsquare Capital LLC - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMipAFBVV95cUxOcEt5enZIWjNHd3dOMzMzcDNzT3l3QU1jYlJEQnRDQ3RGamgyc1ROeW9GdExqTGNrYnZ4eFFwQzBJSVlsdHhkUXVSczNwZDZsTzJHUUZnSzI2WHpGS19oYzlTMkFDeHpTMHo2LXh2Y0ZaQW1NYms5Yk8xQTkwU193dHZkdy00Y2p6T2VJTHJMX3c2Q29UcUFaUzNOSzRhdFdsWGYxZg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            AAPL Stock Today, March 02: 'Whoop' watch debate spotlights wearable security - Meyka
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Meyka • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiggFBVV95cUxOWXZqTXY4MjRfN3otNXdERjN0VnhZWUVzNE5wcXFiUTk0cEtZV0VCQmVNZVdQYWtmZmF5UTBiQ1Q0VHM4NTZ1aWRNemduU3JCNFFCYUl2a2pHcW9pRlVtWUU1eWFMN3l2Y3JQN3poaXNDXy1jQjVqcFNnUUNxQ09oUEVn?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Is Apple (AAPL) Still Fairly Priced After Recent Services Revenue Strength? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMitAFBVV95cUxOdDI5Qmw1RnQyM09IVW1aUDYydGljOFZWcU5yejNxUmFyZjhXQm1ISDYySHoweVdxNGM4cktqVXlMUWZtQUFkR3dTTE1rcExSNHBsXzJObTNTUjFPS25vdnB1MU9hOU1sRGpEekg2Z1AyS2hHaEFpTnNwN29ZTmZQNExvN2xaME9wSkVZNTVPaXJMVVJfUTczbGdPTm93MThHUWc2VzB2MmQ4ai0wMGhPcnMtUUk?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple (AAPL) stock slips before the bell as Middle East jitters hit tech; AppleLaunch week ahead - TechStock²
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TechStock² • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMipwFBVV95cUxPczdNSE9nLWRMUzRmcGI2aWEzTUhrc2cxWGhveFZJellOMmFJbHhaV29jT3d0MWtUUC1CZVBWWGpxd0NkbDY3M1V2b2lDTFY2amtUMjlubVM2eTBtaHpfcFowSkhOa0d6aUFJQ1ppbjF1M1FGaC1jYlc1VW1Ma1VqUkE3RnFvLVJPeVVGQ1EtaVpralJmRVNYSllieXBIbFlsV3NoTTFaSQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Stock (AAPL) Opinions on Low-Cost MacBook and AI Developments - Quiver Quantitative
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Quiver Quantitative • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixgFBVV95cUxPVDVpSGRsRzI0dE04dVVJTXJSMDZlSEllZ0JaU3ZZVkhGZEs4WDkxdEZnV0c2ek15WVZxamxLV081engtX2tPdnlYSGNSUmY3RlROSkN2YWZvMVRLRENKZDJ1SWlBYXNhbE1pVllUNjdCZGRQTVRCZUV0VXNTazdrZjNmZVhxSzc1bWJvdXBTaHFIRzR6OWZmNVlJYWkwVTJraUJvaFZDUm9QMHo2STFBRHByTExHREhIclJ5YU5Qa0l4ejlwYXc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            George Soros Is Doubling Down on Apple Stock. Should You Also Load Up on AAPL in 2026? - Barchart.com
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Barchart.com • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivAFBVV95cUxOUzNyLVBmUXdtajdybzE0cVFxQ0ZOZU4tN0c2akY0bzRINnlLazFDYm5PenFvbmVwTE13bi1MZDg5eUlMUjF3ODJhQUU5Y19YLVgyaDRXZFRjbmJWRmhjalRRRGxyZENBOVE4SlpHc3E1WHJFUWFyNkhQZERpTmNGNjM4VEVvQmFBeFV3TmNQOFVNVkpZTTJHMlllUmdCT2FuQXJSNXJ5YVJJVjVfcU0yQ09OeExHQW5ZS2pjWA?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Inc. $AAPL Stock Position Raised by Argent Advisors Inc. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxQNmNvVFgyejlzcFNaSzNfOUYtM0Y1YnpXay0yRUptUlBVU0Ita3RnOXFYYl9fdmUxY3Q2UEhXeW9nSDJ4NTVWaWFNQjMxdTFSOElFZnlyeXlIVWxTTFJJX3kxcnhtR3E5cDZTY0tnWUg3bzM4RWpoZFNsNmxESzFGZzNBYnNRTGJQUTdncEN1YjJTN2lUbXJlakkyQnpQTGJoc2RzYUZDaHVfMk9kVW5WU2VZSm9qbUNl?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Welch & Forbes LLC Lowers Stock Holdings in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi1wFBVV95cUxQYXNVU3h6cVI1TmpEcmRSdUI5MV9rRG1VQWdrUzk5S29MT0ZQdlc3S1F1TVN0TVNneXotd19EMFBoMDBKb0h3WnBjT2Fta0hhc08tM05VSHRic01ISHNxblhhYk1oWks5OGZCVjdFelltVEI3R1lKbVNfSTNTTHhfeWRZYkthTTV0aFlJZ0xRbmFoYnR6V0Yyb0ptRHFZUXpaUUNJdE9xWmxzTERXYkZGVXV6d3dha0toSXVVZjhUVmlyU0V3RjFfNkZjcld2LVNZT1F2eDlobw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Cahill Financial Advisors Inc. Has $21.27 Million Stock Holdings in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMikwFBVV95cUxQZUlMbzlQSmpPTEc1X2VQRGU4eEwxb1Q0V2lrSzlLdXhhemVTaDdWZHk4U0FqbjFyVGdDZXdqcWlKaUM0M29fdFlGdER6THljcFNoQng0eVpzVFN4LWdtX0xFbU9SR3ZzMWRNd0xUSV9iRlNiWTFteE1VTHA1a1hCRTJycVJWd0RldjNVMjZqWUJqd28?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Stock: Is AAPL Underperforming the Technology Sector? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-23
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMizwFBVV95cUxPa3J2bTlzUDVLWmEySEtIQm9ZbUE4WWFMS3dSLXlSMlpEU0p4elRsMW4tbGVwSFBic1ZpS1RLc3lySkFNcnFKalN1b0ZDajRlc0ppRGFlLVJLU0R4STJwSS1GakpXNnI2NjZ1aEtybzdIeEp6dEJtakhRcHpFS1JZdzVVZGhjd2VrVzQ2cmkweTVUX1RtaE1XU0p0djB2VHJlc2N3UndTNkRYNVMtRndjZkJqeDNGRFlPRndFeDNoTDVGclFzd3NkOVNOUHh4b2M?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Inc. $AAPL Stock Holdings Lessened by GPS Wealth Strategies Group LLC - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihwFBVV95cUxQZVBsN1g1QklCZk9OVVdCTnhlUVQxRHNPcGh6T2JBZzNiOHp5NGhsa1gyYUUxcUdVZnVYaURWZFVUNWlSM284cVdJVXlTXzZjbHNYaTVBVlVnMnNrVlRkYWRkQnZldm1ibEN0UUdUVDlBTUdjd0tDNS1BSWpyekVENVp2ZHhyOWM?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Investors Heavily Search Apple Inc. (AAPL): Here is What You Need to Know - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivAFBVV95cUxQQVJzSEZlVUxvN3VkZU5BdFdmbkZ5VlhGeEpXelRsSldqT2c3bkFTYXJKdnFSVERDcFVPM1lBQTNkZDVlb1VxdUVVVU04QmhURlYtQkJtRV9jTkdJYkdJVThmUUtPZnFqQ0x0TjItNDVYYmdEdnJCaGtFbS1RYzBrX01vcFdiU01MNU43OEE5MUNZWmFHb05USmpaY3FteTIxT181Wk5zZG84VmlIUDlORWlDS0xTVDZEcjZzSg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Paragon Advisors LLC Trims Stock Position in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMizwFBVV95cUxQRWlVcXpXR2RFaUJZcHhYcFJGZGFEcEhPZUxDYVpwdy12SURhX2oyUnh0UzY3a0F2R2xsUXN4SnUzUFgzUWVVdXNpMEN6VUhScURGbEpsclJQN21ZM1YyMjEwUnZ6LVdDa1VQREZuUzJpLTB5Zkh4S0x2dURVTWlHZUlFMVFjT0F2QXloVWFlUmw1V2I3STJWU3FXNE5vUHU1Slp6bURCd0Y5S1JDUmJFNjFLZ3F5bHBrLXZSeWd4d2xMOWZWSkNodUNxLTBQUDA?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Hollencrest Capital Management Increases Stock Holdings in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi1gFBVV95cUxPUmVBQ0VRaHRoOGNtZzlfNUNFNVNLZENGZnU1S2xDd1NaZkhobTZNY0U0RHd0eXVEWlUwWWRWOVVGemw5bXpJTnFsR2NCekxLc3MtMzB5R2FVTmRQZmlpblVOTFNjNVNTdU1aSk9EenR4MnpSUjd6ME5fX1BaMGZpbngtYmZDYXZJcTR6UDhVMlBFdmpPMmxHOGFTN29Sa2JMckQ3SlE0MW5POXBZdG1NUzQ2NDlSUUxhUWtHaUdNRFhRTTlldU5vYXNuMW9xOGxNSEZJbkh3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alpha Cubed Investments LLC Has $179.11 Million Stock Position in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivgFBVV95cUxNQmZ0TUJwTGlfT29MREFzRExCbWNCeWNBRGVwS3N6bEJaeTlrSndNNUFoTURUUmRZSGFoSkMwdHJlMjF4WFUyTjNvdU1NRTNWMEpzSmJhRnpHTzhkS1dDWWRCbE1SOTFqelIzLXozRmd1amZaTHRZclI2d0h4Y19HeEhVVXc2WFJwS2w5c3lqSUw1R0N0bGtsQV9OY1NvZkNvREh2NDhKN0psaVhfX0owbFAtcjg1bGVjaGRxMkJn?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Truist Financial Corp Grows Stock Holdings in Apple Inc. $AAPL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMioAFBVV95cUxNTExmRkhvNjNYa1E2Y3MyRl9hZUtfRVhkNFNBcnJaa2ZfSy0tN2htcGFFeVU3b1RsLWRGNFM5VmtUMXFMWGZVRDRaeGItT2FQWFItVGxjNkhaMGxwNXdlSGNSdXAwNTVrTjZwM05vcU0xNjhDV1RQaFpVMVdjWUVXWHZjUGFHOGZuQ1l0MVJpQlRmRkw1eF9aTGhaUFFUcmNa?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            As Apple Tests AI Devices, Should You Buy AAPL Stock Here? - Barchart.com
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Barchart.com • 2026-02-19
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMizgFBVV95cUxQRFdsVTdGMnF3TllVdEo4V2ZfaDZEVzlJRkNpNmVmQjFRREtMTDZvYVAwbjA1c2hBUVRqSzlwSEtnbkZNbzlGb3l1RFpoVXhDT1gyWGFvaElzY1ZRQXgybGl6WEROSHZ5WHE5cVJLRlRlY21Sc3UtR0lCSmFpeGJLT0diNThmQmdiMjBMUzF3bUhOODR1bmZIRzc0ZVlEN0d5dkx4UjFRYm91UTdsbFJXYlpCdTBRRTZMOVV1cy01Y04tU3A5SFJmN3YwMjREQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Apple Inc. $AAPL Stock Holdings Trimmed by Evergreen Wealth Management LLC - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-25
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📈</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">100% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 18 news articles: 11 positive, 1 negative, 6 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+<div id="ticker-MSFT" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - MSFT</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">MSFT</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bullish">
+                    BULLISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for MSFT is bullish for the next 1-2 weeks. News sentiment is positive.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BULLISH sentiment is based on analysis of 22 recent news articles, with 14 (64%) showing positive sentiment, 2 (9%) negative, and 6 (27%) neutral.</strong><br><br><strong>Key Positive Indicators:</strong><br>1. <em>"Microsoft: High-Margin Growth Points To A Premium Valuation (NASDAQ:MSFT) - Seeking Alpha"</em> (Seeking Alpha) - This article reflects positive market sentiment.<br>2. <em>"Microsoft Stock 2026 Forecast: MSFT Has a $600 Billion Backlog as Demand for Microsoft Cloud Surges ..."</em> (TipRanks) - This article reflects positive market sentiment.<br>3. <em>"Microsoft Shares Look More Attractive As AI Reverts To Tech Growth Norm? (NASDAQ:MSFT) - Seeking Alp..."</em> (Seeking Alpha) - This article reflects positive market sentiment.<br><br><strong>Note:</strong> Despite the overall bullish sentiment, 2 articles expressed concerns, including:<br>• <em>"Is Microsoft (MSFT) Still Attractive After Recent Share Price Weakness And AI Pa..."</em> (Yahoo Finance)<br>• <em>"Melius Research Downgrades Microsoft Corporation (MSFT) Stock to Hold - Yahoo Fi..."</em> (Yahoo Finance)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Positive news coverage (14/22 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">22</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">14</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (22 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMijAFBVV95cUxOYWg5a2VOckxjN0Z5OWdrY21DcTRMY3dXRVkzOXRVWFpCcTFnaTNHeGQ0V1k3dDdwTkpJb2tEa1JTWGlTMGlkSzBJUHdTSk8tblRNSlJBak1RX2RxX1o0NXJoM0lXRjlvWTlnSm4wbTJHU1hDalQ1Z2NfVW5mam9NMDZuMFFkaDNSZEJ0Rg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Is Microsoft (MSFT) Still Attractive After Recent Share Price Weakness And AI Partnerships - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMioAFBVV95cUxNM3dhMmN0NlgzRzdJWE1xOUlBM2E4UXkwem9xZTJ0bzN6WGRKeENtRGpoRmt0ZGRSVnZFN1RVdFAzUFRBbFZPa0VFNGEwZVRDLUVjR1RlQnFMYVVfWDdGV2lCV2RYWmlHV1lLMmpxakRCOUhCbnBORzRiQWhCZGtYYUxCbVdHUFZRS0xIZUJQdXZjaTd2a3FwRHpUT3RCSjJG?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft: High-Margin Growth Points To A Premium Valuation (NASDAQ:MSFT) - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Seeking Alpha • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixgFBVV95cUxNWXRyTTNmN28wcHJzZ09TN0NUUjJrTk4wLVUxeHd3NXc2R2JhZ3hTbWM2Q29naTEybmR3cE95NjdYTnd2d1E0ZmVkOUhsaWtqd2NnZDgzODU1ZlBJeEZuNnRJb0xBcXFfeU1IWUhoVFFLcnpzUmJzYWFEa3hfa1NDZmNneElubFdfVGNvRzNBbTA5UFdOcWhvdHY0Z25hZzZ5dUYtZ0xOdW5MVDVJeTdIZzlhR1JIYjBKQ0RMXzVBRlVqV2VRVkE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Stock 2026 Forecast: MSFT Has a $600 Billion Backlog as Demand for Microsoft Cloud Surges - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihwFBVV95cUxQLWtTWUxGUkYyRG5VZWZUY0ZVcmhZTnFTallTRWtXdThERVdqRy11MjYxamMxT1A1TzdrMWN5RFc5Qm1yYzBycFZWM05FMm4zRFpXUDN5SzV5QjNYNndzTmdSSnZrM0VucnVITF84MWNuaTZrZEg2Z3V4enR6NVBjeFVWUEE2eEU?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Here’s What Weighed on Microsoft’s (MSFT) Performance - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMisgFBVV95cUxQa1RpamduM0NhNmFHOHVmVkRMWWxTOWEtSE4xNXp5Y3VnUEdPSnBqdUR2WXhZak1lTW1uRTBtNksyVG5oNWdkSW5VSUZGX1RDMnR4Q2pWb0thcy1MUEh3S1VvTDg5bTEtekZSVHJsdFJ2d2lLazA2S3g4eUFoN0E2ZDZobXNkeDhBOEd3UVJaS1Y3VWE4TGd3b3NpU1JfWEFNU3hUTUg3REVzVk91YWtDOVp3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Shares Look More Attractive As AI Reverts To Tech Growth Norm? (NASDAQ:MSFT) - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Seeking Alpha • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMinwFBVV95cUxOWE5JbnUwMnlDTnVnZlhac3pxM3N6bmxQUmNIOTBjTnpxdTF0U1l2dGg4eG9uekJVWTMwaUlOVVRIT1I5RlZQSWdFakMxRmVyci1TMW9EaEgyUC0yT1ZaVkVGLXQtX0daLVQ1bDNoOGdFcXVLZnFac2EzTHdjSGpsYVVTZEJnNDZJVFVuQ3VnbWxMcXRXQnZtYjRLQ1ZCMXc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Corporation $MSFT Shares Bought by State of Wyoming - InsuranceNewsNet
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        InsuranceNewsNet • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi4AFBVV95cUxNQV9qS0hKeWR3WHU3UHdxVlpKMXM3OXhxWk9kSDROclBhSnlyTEJRSnQ3R0lkWUQ0eDc0M1lXdWhiZzFtaVkzWE5SdS1IMVNKdUd2OVhKRjJnUTFFWUs3V01WVDl5eHRYSDkxQUd5NG8xdGtoSzYwYTNlWHlTRVBqdWVLcmd5X2trbjl5R0wzd1FSbGdCSlhUUGVycW43WGMyZmhqQ094bDFLMy1nZndpV0ZDWUE2Z0t6eENsV0s0cElzSDVhSm1OeC1WVnAtMFNJUndqMmVrNFhsYmFuNkhIWQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Corporation $MSFT Stock Holdings Lifted by Mediolanum International Funds Ltd - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivgFBVV95cUxPMlMtVHdBODlDSnM0LVRLZDlENC1HakR5cjFXcXplMVdOSWQ2a3ROTFgzMlE4aEFsem5ERHkweUt6WXV0MVFkSG1zQ3UxYWs0OEVyWnBNTXp1dTR0eHdNeEkzcFhDWVVfV0Y3VGo4REN1RmFTWV9sa2x6VHl0NXRvY18zcEJMVjZ6UHdfVndnWnRJWGdtMC1HLS04Q3dKU0dqbmFuVk01Nk91cHZXT0llWFZ2UnJST2VuUkptdTd3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Corporation $MSFT Shares Bought by State of Wyoming - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiqwFBVV95cUxOd3JEYWNKc3N4X25iaHlmVG1vcFYwQkpWaFUyY2NLNTRrbEpoQnJoVm1VbDRpREI2UlpMZXZJTk9rS0RReE9GU05JdjFZOTd5QW5kdEtwd3BIa20xUG9CWDVRNzI4SWt6MHdVTWtGcTc2NWVMNWowUVdLbzRmQ0U3UUkweUtPU3g0NEV0cWNKVF9EVUFiejFycW9pSHMwMXVENXRVWWJxcWJtMG8?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Is MSFT Stock Vulnerable to Rising Capex Pressure From AI Spending? - Zacks Investment Research
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Zacks Investment Research • 2026-02-23
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMitgFBVV95cUxQTF8wSE4zZFpvQjlyWVNXdWxLRFNTaUdtdzkxWFZRa3BkWVVjTTFYOFpVMmdGcWtKMGlCZlk3MWxfcFFjVFhJaEdRYjVZTWt6Q21pVDJmbTVIQjcwdkR6Y2FjOERFQnkyZUI2NGZ2bWJneFMyMHlzUmh1QkpxZFV2TWg4V2dDSmNNeER3MzZpUjJqVFNSWkwteFJaVXBQRmpyZGhOeUJsRnUwWmtDcjJQOFZianhGQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Is Teaming up With Starlink. What Does That Mean for MSFT Stock? - Barchart.com
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Barchart.com • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixAFBVV95cUxNUG8zNWQ4LVJBVGZqX3pTb2JjX0pGZWdtV1J3REhnV2lxUzA0UlVyTFJ6ZDNhZ2hWMmZiajdWNUhhbjNESTExWjVBZ1ZwdTR3LXZJaWkwTjhBdk9KUW13X04tekpFTGo1WWlHZG00a0Z3ZlZiVWxyQW5pYUZGRGUxeEdIeDlWdTZRZzlZVU9zaFREZ0xteDlaLVluUGl5TGdpc2w5QS1MVVVPTG1FMlFPRjd2UktSVnFQRmwzWk5DUlRXa2JN?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Corporation $MSFT Shares Bought by United Community Bank - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiuwFBVV95cUxPcHMyZU92TFhwLW8tOVd4QWxHZlAyM0E3eFlaOTlXb1FzeTZCcVg1eEJIZHZBMVJYZ3dTMVdIdTdkSXhDWGlxZ0FHM2taY2xHcTlldTE3TDRNcE1fTXR3akJGNktBc0YyeFl2cTA0aTh2bmpZRzBuc0ZzU0Q3SXo5aUVaSE14LUJMM1h6YXVKR1l6OEZyN0JDXzVxQjhFQW9QeU41ODR3bldocjZhdTFRN1MyMXpNWThZcDRv?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft Stock (MSFT) Jumps as Xbox CCO Confirms ‘There Are No Directives on AI Coming Down’ - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-25
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiyAFBVV95cUxNak5hblZtTE9WM2N6RmZGcVhlWmwxQVZQSTVDX2JzUWFYVDJQQTIxOTFscmx6d3FUdGpPdXF2aENnakd0aENkRU1HZWVPRzluSGU2TW9NT1RfaWlCeDNubHRfc1VwVFZqN2t6cERYSGJpS0RscTdrNVpReC1RZFN0dldSeW5CSm9rMXdyT1pvVTZGenFpbnBkRTBMc1ZBVnVpV0VUZ25WbE9aZkpBODhUbFY1dmZycjE1Y2xsNHlxVTYxVXQ4SEZMNg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Win Advisors Inc. Purchases Shares of 2,087 Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMieEFVX3lxTE1OUGtMbWtiOVlfVmIxRm1uS2FPMnlVUEE5NTJhZTJXZzBaOVZNczBJVU1adE02LXFzMmZQZGRLOGxtRDZ2ZHFjcV9JbUtBNG11c3F1VGJ1RVZQR2lUc1FIQ0h2d1ZnMDB5SHI1aVVmWnV4R2ZqcGhwcQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft (MSFT) Down 7.3% Since Last Earnings Report: Can It Rebound? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMinAFBVV95cUxQQS1JdkVCY19uRlJfZDF0c3lCWnIyZlFkSC1xRlBSU2c4TVJ4alZoT2JKQ2Z5VTBFcHV3QmpMeWRVMW9LMkxSbndIdG9qeTlObXR3c01vbWVCc1daRmVINmItb1VJT1M3eE5tak1MTlE4X2lwd005Njlxa1l6a3ZOOUJjWldqanFObktfWHNjVkVRNklqZ2d3b2hORms?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Microsoft (NASDAQ:MSFT) Shares Up 3% - Here's Why - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Microsoft (NASDAQ:MSFT) Shares Up 3% • 2026-02-25
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiywFBVV95cUxOQU1uX2VkMTlCVDRpQjdYZmJEMjQ2U3haX29hSWhkVHRIZC1Pak5wQTM4aUhzMTNvWFpzT1VoZHdUTVd5aWV6U0hyYjQ0MzNvbWRBT3N6anItajkydWNHNURLSTZDYWdiVlZuUDV3MWpMUVYzWUhTREZPbHdHdEVqRjZWdjdBSllWbXczNEtORFFBSlhhMDQzcTlDR0JpcG9ON1c5eVBmSWhBMmpQempNRHo2WjVfeWpQY1I5SVF4QS1aOEZHT2lGLXJSUQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Guerra Advisors Inc Grows Stock Position in Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi2wFBVV95cUxNUjNkMW9mZXN3bG9iRERwenJpX3k2TndLdTRNd1cyOU50NFBsa0F6R3NTRkNGYm5OdGMyRFRpbEp4YzE3cFl0Qkt2SjQ2SjQ4UzY1OGYyNVMxUXpwSDVfRXF3a0k0d05PQ0hsTkRyY2R0dXdPWUdXcUwxeDFpNHpaMjRuVFdqMndjdDZ5RXVkOV8xMllndk93STZIVW50TDdTWTlmc2lGYjE4dFZ1Tlc5MWpBQVVrVWJ1clhGdlFoblJZOHJDbnZtYkp2RDhUbkM3VUkzZFdBY1JEMk0?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Jones Financial Companies Lllp Boosts Stock Position in Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi3AFBVV95cUxNai1GRUJvWjdoNHNBVERuSlpKQ2pkZUkxTUtodjZMU0gtdC1mdGE1VXBIa182Z3hBdF8yYmFGZHFuTjVCTWw2SXVNUFJCcGZYQ3pCaHZxZlJMOG1QYTJ5TV8ycXpfU1NVT0t4N05QLUttTkVvbVV3Tl9YZFd5dzZvZDQ0XzlaenZad3VKR2Rrak1uOHVCMGxhRWJubWstcXdTd3E4TnRXWnBhbDFpc2tZLXlFQlBCR3g0WmZTajRZSWpfSHZNNFl1dHhQd3pZalk0Unp2dTYxNjFVdEcx?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Atlantic Union Bankshares Corp Acquires 132,254 Shares of Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi2gFBVV95cUxNenNjcUFONE5MWXFsdUdLOW1fSFpKdkVWWF9oUVdrVklwSk5rWU9ZWm92Q3BsbE5qRmdsc1d1LVJ3d3lOaFRqUnlTeXcwSTY3U2dMbk9BQkRlamNPdjBaLXJ0aDBEaS0wQ0NBeVJhdHlJOUFZUnc2Yk5BZEhaUHI3UUpDXzJCRHVDMkNOZVk5REtudkU4cDFFWUNuSmxwRk40aUgzNDIzQ0JfNFdFYmVWSXlYQ3RoZFVJSTBpakZuZW1rRDRlNmVCdmdpMm1IN2ZsR2JfMHlCNkNYdw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Mawer Investment Management Ltd. Sells 224,789 Shares of Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi7gFBVV95cUxQT1Y2R2VpRDBILVpHY21hM1d6Vkh5bFRLSy1odUN6dEMtRW5ndXNSVmpVSHc1SHlhMTljRk9kdXJSVkwtbmlab2VndU9WSWtRLVpmNmRJVi1qSkRWTHhSeHhZZEpxSGFvNnJNRHJDaW9qdjlDR2p4VDhudzc3QURvRzY5eEZZcUdvWGMxM0VTcE9qeUtzQVlpR2J5a2pKeEpwdmhydEprLVVtWkZzWUFiaEhCRU5KWElROTkxSm1jOWxxaXJjZHdMTG8waGlpbU0tY1FZWE9rTS1jRGZmYmxncHp0U3FHaXB6OHdZWU1B?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Bridges Investment Management Inc. Has $476.18 Million Stock Position in Microsoft Corporation $MSFT - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMimgFBVV95cUxQSXIwbk5OZ3RmbUZ2eEk3TExOTzlTWm1WVkJmYU4wdW03NVJ0SDV3TE55WXBucTRyQU9ETHBhZ2xrMmhLS0xqUUxIWlc5elZibkFxSEF3OTVMTHNXMEpZaFZ0a1JwYzlBemhHYll6QjZLUTlVLUlnUkdoYk0yaW54QnpuXzUxM1l4ZUhyM01xLUtHVzhnOWVVSFhR?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Melius Research Downgrades Microsoft Corporation (MSFT) Stock to Hold - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-17
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihgFBVV95cUxQY3FnOUtMV3ozZUs4c0w3a085OC03S2NoU09OSkVBbk5hRTlmdkdobUhwaTBkaW1DT2ZqdlJtVXBtMG84M2FrRm9LcmpHdXdId3VCTEtOdVNZQzV1MUVMZ2xiaUZsUjlkcEhZS09ESkdDQlYwNGdWWWloSWV1VXpYUmNnTWFOQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Director Stanton John Just Bought $2 Million of Microsoft Stock. Should You Buy MSFT Too? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-26
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📈</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">100% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 22 news articles: 14 positive, 2 negative, 6 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+<div id="ticker-GOOGL" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - GOOGL</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">GOOGL</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bullish">
+                    BULLISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for GOOGL is bullish for the next 1-2 weeks. News sentiment is positive.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BULLISH sentiment is based on analysis of 21 recent news articles, with 14 (67%) showing positive sentiment, 1 (5%) negative, and 6 (29%) neutral.</strong><br><br><strong>Key Positive Indicators:</strong><br>1. <em>"Alphabet Inc. $GOOGL Stock Position Reduced by Shell Asset Management Co. - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br>2. <em>"Alphabet GOOG stock price rises on Meta AI chip deal, then slips after hours amid new Google ads pro..."</em> (TechStock²) - This article reflects positive market sentiment.<br>3. <em>"Alphabet Inc. $GOOGL Stock Position Cut by Pallas Capital Advisors LLC - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br><br><strong>Note:</strong> Despite the overall bullish sentiment, 1 articles expressed concerns, including:<br>• <em>"Alphabet (GOOGL) Ascends While Market Falls: Some Facts to Note - Yahoo Finance"</em> (Yahoo Finance)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Positive news coverage (14/21 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">21</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">14</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (21 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiywFBVV95cUxNcS1vRmRYbmFJaXJWV0tKMHBpNlV2SU1VYlNCRHQ2TG5Ta3FMaHNDRmNzdXlnUUlxTEhnNUpLNzdTbUUxYUlUYzRWNzN4bjdvY0hOX1B6SmhOQjRPa0MwZ0FBbk13OEtabDdDWm1QakQ3RXZ6MU9oQXljbDJqTkhwV29rSjVSM3dYRWY4VnNUdmIzZkdlZ0Q1bm0xbkNLQ1dteU5vUjA3dXZaR2dRRUpBTEtTZFJLZ2JCcEYwZTIwRHlIZWM0NVZadThjMA?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Stock Position Reduced by Shell Asset Management Co. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMif0FVX3lxTE0xLWZiQzBhbi0xTGFjaWMteW5XUllfYW5EcTJkd05oMUpWWnhWR05uM0hkZ2J6M19ySVc0OUFRTmdlX1V5ZWNiSEZSRkQ0SkZJd0l3Z0J3Y3llRU0wRFJQUHEtc292OG1JclVkQTJSQXoxYklHcl9tek9teXJGeGM?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Bull Call Spread Ideas: GOOGL Stock Looks Ready to Move - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-25
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMioAFBVV95cUxONGRNc2tTalRVcW5SOTdIbldrSkZxaWVyN21HeTRHY0o2ZHRveTYxbmt5OVg2cmZjdlhkS3RJbXJfRjRqYV9JOTUyZ2laN1BpWWtiSzVNRmZGa0pPR1g4NUYxZWxrckhsT0N4a2hmZFA0Wnd1RWxiRDY0R1BlOVdrMjAtRkNZRm95cVVXdlhtSDNldm12LW4xNnBMR0V0eXl0?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Why Google Stock Is Still An Undisputed IPO Benchmark To Learn From - Investor's Business Daily
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Investor's Business Daily • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMizwFBVV95cUxQNWRqUjZ0dTlIamgtTnZ2NHoydndJTl9uVTVKSXJfeFo5ODBBRXVBOGhUblJXVHVVejU0eVBpdlNCQWwzd2UwemtpUS1VSzk0dGZNYTl6eGJoTXFSTWotODdaQzBaWUg3VUV0ZGVDRGZOR2pmSGEyUmhMMUJTa2NxX3VCWHM4RkJ1QlhyTzdaU3RGeWhKdnFiOEh3RDZJdy15UDJmbnVlUWhlSXNJd296WmVQQlp4TmNpVWFxdFVpRzlFbmlCalNybVlzSGtnV0k?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Michael Burry Still Doesn’t Understand Google’s AI Spending. Should You Ditch GOOGL Stock Here? - Barchart.com
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Barchart.com • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivwFBVV95cUxQdEx2VWtBRXBzWGxXZG8za25tTEdaRzBjdjhQOFJyVXlCd0VOU0JuUWQySkZmMG9LRGx1N2ZDT1dxeEoyRVh3cTVtb3hJbkhYMDc0eEFBX1hkVXhLdU5oTWtCdVNhZUowbk5oLVBlTkxKTExnZVJ5U1lSX3pLSzB2N3VTRm41TFp3b3VXQ3dnUWpXYzJkTWNINjlTT1dwcUtZdFBpUEVoY2pHVnJXTWNpUzBSOXdhM2E4QldhNDJpcw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet GOOG stock price rises on Meta AI chip deal, then slips after hours amid new Google ads probe - TechStock²
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TechStock² • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiyAFBVV95cUxNNjJpYU96Q1RfeGpPVk1FWHg2OXhPMnZVbUZQMEMydWlyeDF5TDhnNEZlTWlVaWxJb0hPN0owU1lnSlJsbWlUR3IyRzMxNWtIOUNCUkF5elFtZzhhUVpFRFNZbzl4WEpjUVh1UUpJZHpLY2RTMmoxWmFEVW1uU2swUVpIQXZQNEhuMUE0N2JyX2FsZnBjbmt5WklhZVAtUnBpbHdVZ0Nval9QcWRLdUE1R2w2ZUpoNXU2ektUbURjVkRudGwyMWxyZg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Stock Position Cut by Pallas Capital Advisors LLC - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMikAFBVV95cUxOcklUejBsc1h1RV9UX1IwSnhwZ3M2UFg4TXkyUTVucUdnX2hndzI3dXp2OGhOVnBiQ2J5YzBTVG1pcHNodHNuemVaSmFlOTVMaHNELTI3b3ZpUFdUOXJRaHc5QlRVeUZiMkU3VlpJYmF0XzVLRHFuWHlrZk9teFhPeWs0bDNnZE9hYkh5b3A0NTE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet: Google Cloud Is On Fire - Reiterate Buy - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Alphabet: Google Cloud Is On Fire • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxOVWpvZ0xkMXY2OEtNMFFOeF92RU5qbmQtSm54Y1NOODVjOUNqdVdXbnlaWTBUV1NjSmNlbTM1VFVZOHFKYVVCX2EweC03ajB2aVdsRVVfaW9HRnlsb0tlclVaUmdqWXFOdFZSMmdlOTdsS2kxYkc1MU4wVWV5WjVYcHN0Q1BEWlVH?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet (GOOGL) Ascends While Market Falls: Some Facts to Note - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMimwFBVV95cUxNNHF3SmVKdk8wNDBJZmM3ZlROcjFpcU5HMk5rSi1zRnZoMUdiRE5IckwxRkVpMFdIdTVDN2drZ2pVcEdNUVh3R25SdUJhS3NLSWZrck10N1RkZ1l6aWVnMzJGam9FbTJZczRZTF90Y1h5UmFOWVhWNDY4WVRkOU9uQUxQV3RhTjEzR3hnMGt6UmZiaHR3Q3ZZUHJmMA?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            High-Probability Opportunities Available On Google Stock Options - Investor's Business Daily
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Investor's Business Daily • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixgFBVV95cUxNcEhYVkxtQ1dlY2RXTm1GbkVETE1QSU5sbkFWRzQ3Rk82Uk5jRk9aYjhVLU5TSGlFSFF2eWkwa2Q1ZHZvekRNS0Y3MU1Nb0pDS3VUaXk5QkFPanhRXzBsXzBQb1BaTEpGelpQRkJnSkJYUUhBUVg4VkZIWkRPaTV3YXdYa25wSklLZ1ZUUjhFYi0yaFZ1X21KbDNwbkhUdWpRMHN5aFJFTXBFSlFqeFExRzJJUmNDazlMNm9TbE9DZmE5SkNZRlE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Todd Asset Management LLC Sells 24,107 Shares of Alphabet Inc. $GOOGL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxOTzlZT1V5X0R0dE55VGVfNTA0NlYyYUVmV1Z2eUtBNFVrSTEtaTEyaTdCMDFmVEFwbC1XR1R5VzZnekd1M1FobUYxZkFMQzBHa21HMGtza2JNOWloSTBRSk02OElYX2FRTVVVUlBESUJoX3pmZFlzMVIydW5sTTlQVmZ1VQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet (GOOGL) Stock Trades Up, Here Is Why - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-20
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiqAFBVV95cUxOemU2Sk5POTBmaUliWk50WHhkalpleEh4dTZKZTBKLUpDelhjTk03UVhFazdYV3NkZG5WRktPUndjOEtGVkcxa3ZDNkhhcTJwNTNDOFJqaEVqOE0zR1ktUnBKQW5mcGc2cTJfX3Mtb09oV3lWQTN6Zkk3NmxSdzk2bjNmTlFpcUpEcmpiUG9kckZYWDNHajdzZmtscGxqMmVYWVJqd05KdTk?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Tobam Buys 2,149 Shares of Alphabet Inc. $GOOGL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi3AFBVV95cUxQNkpmSVhvenBZWWU3MVFKSVprUkFGMFBVVVYwNnZfM0FSYjQ4Yk9qcDc3bG9LS1ROamN0a1d6NHl2VUFYbUtCWk1VT09iRVVMYkg3N0p1aE12aE9iZFdmc2N6d0lmVFlSZWktbjlVcFlZSk8wZE9rRXJtaHFlTjdDNVJfT1ZPSm5YcFdRWEpvdk53bkNvUEt2NWd1T3d2LUNWTDYwNzF4LW1XcnZ2aHdqQVdkU0pZSmNNT0ZWWEVNbDlkYWFXTmszLXFfSUFWUk9MUUZ0cDNKUnJzZFRN?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Stock Position Reduced by Public Sector Pension Investment Board - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMipAFBVV95cUxON3NRblVVczFBeFlIWVMtTVFqbVhUcU5SVlB2RFZ2SzQ5Vnd0LS1NUkZPZ3ZMYlZSUlFXQVdoUnh0WG5ZOEdiOF9UbFN1eWxuOWhBMzlrb2s3ZU9NYWdzYnZwMlQ4SFpRbHNEanYyaWdPSlUzdV82VzJYdlhRVEJTdzl3OXhmaTJubndMSHBXb2gzV2xQR1N1S0hGcXk0bzhtZ1B4aQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet (NASDAQ:GOOGL) Shares Up 1.4% - Should You Buy? - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Alphabet (NASDAQ:GOOGL) Shares Up 1.4% • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiyAFBVV95cUxObDZsV0EyaGlNRHp3cWdyak4xeDNGVWVwNUt4UG1zWHJtWW9YWEd3UTR3SDQ4bnhObDdmazNFOURsdklzWlpVWGtzcFRFT0tUWDB2cDlIR1k3TlEwRG1UYXB5cFVncXRkNmtXVHVfdVczSUVSQnMxdWg0djNraGVBTmp6RGR4cURURkZiaWZlSnNiVjQ5QmxtUkM3Q3BsVnU1SzJNcUV2ZHN1eVlpNjBsLV85SmxCTkFzd0ZBZ1pXTXo0YzRDdXUxdQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Shares Sold by Coleford Investment Management Ltd. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMizwFBVV95cUxNQWpoZWhaaFNYNzJFVmpoVm9YcGJMbVVjc2xWSDdKU0g2VHY0ZmxhT0lVbjRKeFJkWWhaZTU4TXZlZFVQNXRSTUZ1bjJGOEMzX3J0TUpTUWRLSXhWZFlRU2hXQW1tSlB6Zk1vcTZpUlpTd2NHRmdPR2MyMnNJUk9iTDZMcXdsVDZWaFMyX21RekQ0Q1IxRHlSdzZtVGFHekZESW1FV0xwZ1U0TWZCQTkwcU45UmZLUEpxU2NIcDd0RHFOTnlwbWlSc0xiMkwxdEE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Stock Position Lifted by Elmwood Wealth Management Inc. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi4AFBVV95cUxNLTFSdzBISnA4UEYwS3dadzVXVEhrSWYwMFZadElZYzVRYnhvQ3h1RFFVNURsZkxhM0lNU1FTT1hhNzh5a0U3bFZlQWxRbWxNTUI1MnY4ZlpROGhOSzROaTlQZ0o4WTJVOVZxLW1LanQ4SE1YZGxRVklWZHk4c1NjazRkNWFLb0U5ajN6Ni1UZU5FdmlVdWxvWmQzVWJTMXJBQnFIS2ZBOFdnU0RnWGEwZWVtLWxwRlI2YXpUekkxSms0cEg2a0Nlb0lmUXl3ai1xbl84cnZZN0JxbU9neEUyMQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Stock Holdings Trimmed by Financial Advocates Investment Management - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi0gFBVV95cUxQVmd2cEEtX2FXdUFvam1WYk1leV9FT1B4RUcxUzkyUDNmcFBGeURtWFR4OVJXODFUSjkxYXdaNk4tdzFzQ2g5WFMzUXc0MjJkc2E4Y0luUFFyYV9oVXNTWWYzaHBuLXF5aUJtbmFza3gtcmt6eVloT2xqcDVEWTdmM3FhbDJPYW5pckp3NEtTalNZRmc3VGFGc09vakV1WjIwMGZqSG5ma21NNVlub0hBd2ZQbkd1eXJtWGl4QVlGNFBybTV3ai1fQVY1WENBcndhYWc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Coronation Fund Managers Ltd. Decreases Stock Position in Alphabet Inc. $GOOGL - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivgFBVV95cUxPUlFYZGZ6VXp1ejRKRW1ZM253TkVwOTAxRkF3X3FBYVJIYkZYLVlRc0tyWW8wd3dvdlNiZ19JLUcyUW5wRTIzRXVZUzR6VVVmR1pMZHpFVHYyb09WOWZDZFVNT1VLakIxUHltNEx5Mjd5UUdaTkxxVzRqeDZlaFpZY1RTZ1VBR3ZKVWFlOFBlNjg0RWs5SU9uclo4N1Nua2tTVmJNR2FoQVRvaDg0eFU2WGk5eVFKdDlYbEtPRUlR?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Shares Sold by BTC Capital Management Inc. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiugFBVV95cUxOZEo4aXBZc1ZUa0RoRE5XWkliakphTFJZVFp5VlZpWm5YejVsTGlPeUN4V002bEhUR0VST2xhMDV0TmNWVWxGT1hJZUk0SExuR3VEMU1XZ3N1MWxEbTJYZER5MjhXTDh4TUxVc0JPVC1STF9lT3IySnEwUkpCUm9RQk9YLS1yRTJ0NmlEbGExRmJCMU8zMjFLUTh5WWMyRWVqdzJlczRZcXhlbTFqUnltMEVMaW5DSXpYT1E?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet Inc. $GOOGL Shares Sold by Everest Management Corp. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiuwFBVV95cUxPc0h1OVhjX1gxMngyVnNyTXBCeEJ6d0xYU1ZDb1U2SjJxYXVqenpsZ1pFd3kwV2tUdXZjOXc0b0dnTmhua0RvQjh3TzVwMFI4cGhJZWxnZDdVZEV2bmM5OHlveGU4MkhaRWFvMDJvMVV1dW1ybEVzU1dQVG9zZVhqMmNHbm1Yekx3SFIxV2tZWUxZOEFuOEJXV0d0UDdMVXhCSDFXXzAwQ2VXeU9YS1MtcDlEYjR6ZXBpQ1o4?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Alphabet (GOOGL) Stock Steady Near $311 as AI Investments Surge Post-Q4 2025 Earnings Beat - International Business Times AU
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        International Business Times AU • 2026-02-25
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📈</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">100% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 21 news articles: 14 positive, 1 negative, 6 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+<div id="ticker-SNPS" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - SNPS</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">SNPS</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bullish">
+                    BULLISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for SNPS is bullish for the next 1-2 weeks. News sentiment is positive.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BULLISH sentiment is based on analysis of 19 recent news articles, with 8 (42%) showing positive sentiment, 2 (11%) negative, and 9 (47%) neutral.</strong><br><br><strong>Key Positive Indicators:</strong><br>1. <em>"Piper Sandler Issues Pessimistic Forecast for Synopsys (NASDAQ:SNPS) Stock Price - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br>2. <em>"Synopsys, Inc. $SNPS Stock Holdings Raised by Montrusco Bolton Investments Inc. - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br>3. <em>"Choreo LLC Has $5.12 Million Stock Position in Synopsys, Inc. $SNPS - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br><br><strong>Note:</strong> Despite the overall bullish sentiment, 2 articles expressed concerns, including:<br>• <em>"Synopsys stock (SNPS) set for Monday test after Morgan Stanley downgrade, Conver..."</em> (TechStock²)<br>• <em>"Weakness in the IP Segment Weighed on Synopsys’ (SNPS) Performance - Yahoo Finan..."</em> (Yahoo Finance)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Positive news coverage (8/19 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">19</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">9</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (19 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMigAFBVV95cUxPYnZpMlpibnRhVVJLVGdRV3ktVHY5V0tYOTB6Y1JoZlFNWDhEZ2RucVRsZ2MzRkw2TEdzZTJSTVFrZFBkY05XVHFTZUplREllOGtUNWxWWHlCSTlLUS1sVXZzZjdFYXU3ckJaOF9yWURvNmNWMkpQSUJmWTRZMVRmNQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Can AI Push in EDA & Ansys Integration Help SNPS Stock Grow Further? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixAFBVV95cUxPa3ZKMTFZUnVFTXM4cmI0dE8zNlpJY3EwN2hUNnd2NWM2S1JDcXJyUTBXdlhMNElUQm9iVGVsd1FnVnhfSU0zTW1MbVFZU1NrZXN4c3o5UWV1ZGZqSFJlZmNueGdxZGkzbFE2c0ZvVzFJOGNCMFZpQ1FsTVFKOTd3RUU1cHU0UURHRThkT3VhNUR4UEFYcGRzZTFQbS15YTdPb3hHRm8zTG5ieFNhYXBGS1dmamlod1ZZblNKTXA2dTU2VzY20gHKAUFVX3lxTE9NSGkwa3ZTMXB5T0Y1Qm9nWFVGMFRDMDZPWm9ab1VjMGNfNVluV1RTQWtMaWMzRUI4cjJ1TlFTN3R6QzFxYnBmamNxZTJCR1pFaXdFRENUblFCR2ZUUVdyN1B2U05zX0wwaEN0aDNuYnF3Y3dBTEo5TUNWUFl3OXc0UzR2bFdqOURJQ2tTYW1VVEpwTk5CLUFZYlZ1NktqY1ZHM0VFdVpQdFdCcXUxUW1Bc2UxMmZVbUJBTkx6ME0yOTJHQnJlVFBqUGc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Reassessing Synopsys (SNPS) After Recent Pullback And NVIDIA’s US$2.0b Investment - simplywall.st
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        simplywall.st • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMipAFBVV95cUxPdmtGZ0YxN0x4Tlh4WFl2SUtJVmltVHZwNUhQSEVxeXV1M0I3YjNoX1hZUGFmbTNFVm9ySUtiVUk2dWRBdTFYVC1kQjdXaWRLaHJGUm8wTGM1X3YzU2ZUXzEweWxSSzdRM1pySWl2LWUwanZfeDB4ekllWF9zR1RtTXg5VmJoU0pmaWMtcWkxMFB2SGNFdVBNUGJ2YkJ2cDJhYUdaNg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys Stock (SNPS) Opinions on Earnings Release and AI Outlook - Quiver Quantitative
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Quiver Quantitative • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiX0FVX3lxTE12QjBhLUNRekJFSFk5YjV1M0ptdkFhU0h3SVh3NlZpNmEzcmxDa2dvU2tGN0h0TjhwYW9Fa0VOSEhtclpVOVIzTTdLeEhLZk53aktkTDBnMnJBTUUtWUFB?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            SNPS Stock Price, Forecast & Analysis | SYNOPSYS INC (NASDAQ:SNPS) - ChartMill
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        ChartMill • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMitgFBVV95cUxNcEZRSUxKckhYbXkyZ0lXc1FoUEY0TU5JclJHT1FnTmdKQ3oyWGxXVV9PcjlBMlUtY1MxVVpobWVLLWtFZmRCTS1uUzdXR2RQdUwwYU9xZDJLbmNQMlM5Y1hBM2ZMOFFraGRUM19va1JfWkhFSVJiQWRvMURfendGaUpfZVdvM3ZMMzh0QnVrVnlxeUdoQmFfdy1YZk5Na09Ibk9SU2ZrMmlGMnlJek9tRXpwODk5UQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys stock (SNPS) set for Monday test after Morgan Stanley downgrade, Converge event in focus - TechStock²
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TechStock² • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiowFBVV95cUxOclFSXzRwc1A3d0pCRnBqeGx6d0JoYzFfZGZQZFpKQkFwWHVMdmRKeTNUSGo1d05jWE5QY1dZMmNKeVRJYmZZWW55Y3J3ZHpWWkROcndPVUZCY0JJU2JJWjNyMl9QX1dVeWhvZzFYejFDV0V5anRzbUpnME10RFZVc3BLeEhNZjhzOWRsdFcwa0ltRVdHbGF2bm1ibXJnMG5vclUw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            $SNPS stock fell 6% this week. Here's what we see in our data. - Quiver Quantitative
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Quiver Quantitative • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiigFBVV95cUxPXzdJNW9sMWl0Z19hc3BVd0k4b04tbm5oNjA3dEdiOEhzU3hkQVZsaHNTUzZkcklFMno3ODFYdWg3aXpJbUEyOFN6VnVyUV8tb2JvN2ZRSUE4eGdDSlpwRWJQQUVGWWlVbjgtQUNtUXpqWnRXNG1xZlZXc09NVTBBQXNoanNSbU9aYmc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Weakness in the IP Segment Weighed on Synopsys’ (SNPS) Performance - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiywFBVV95cUxQclJNcHVvN0ZjSVExSVd4NFFwV05QM3FISU05cDc1aEdtUEN6SjdIdmxnU2V3ckJUcUg2TlJsWGhXeHFpQjRTX1dWaVNLZk1ITU1Sc0UyR2VERnpxbGE1RmZWclIwVm11M05hakowVFU0V1p3aWh4TUM3Rk5DY0htZEt5WTBhc2gyWlpWMUIxc2ZzSl9seU0xc2ItTF9VZ2lqV3FfSmNJSFp5MkJsUWNCcWpvQTNqY0JUSW1aX0pSTE05QXlhcEdmV1I1bw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Piper Sandler Issues Pessimistic Forecast for Synopsys (NASDAQ:SNPS) Stock Price - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiiwFBVV95cUxPV1ZTenVDTjVWMTdqQnJOR21uQ2lFYThEUVEwcGFJdE91VWZfbER6VXplenV2dkNMZzZoak5IR0tmMDlhZlp0am5JT0hUbWlDVE5mNklRT3RjRWxyMDBkVWhNeUQxdklWSFZONU9TWGJfakVXYjlqMmNHTWxEZ0hhbTNDSlpGZDhrY0Vn?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Is Synopsys (SNPS) Still Attractive After Recent Share Price Pullback? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi0gFBVV95cUxQVGtLYzFhRVYyLTNmTGM2NzZma3h6dGMwVDZ2ZUlGSUNfZTRlV19MQTVwd01RZjA1ejVMM1F0ZEU3c09yOUtRUW9GdGNTRHYtLThLbXRYdXdUQWhmeDB2UV9ZRk9yZFZ2a2s3eXB3aVNIVVBRLWZ2R2J5dHJodngtVGNsbEN2Y2lPbE55aUpwMTAza1FOV3JVTFRiOXU1bHlUUElrdzBtLXhkNDdWd2tPWFp6MTliYXFSZmJJWGIxRXhQOVI0bk1lQWE0aEdVTkJrT0E?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys, Inc. $SNPS Stock Holdings Raised by Montrusco Bolton Investments Inc. - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiwAFBVV95cUxPcjZMVWNuTGNlQWtQZ2RxX2NzOUUwRXdxRy15RlI4SEZGY3NWRXhJU1Z1SF9CNnV5Qkd6TzZhOWlMWGtNZnJzYzgxdXptN25ha0VlOF92ZG8wTEpkTHhjSWNvdU01Mk4zcGZGWjBYYzh1THFaMTZxTDMwQkxfVVoyZk10aDFBQ0ZUeW00di1FSnh5MTg0MlBLNEJLd1k1Sm9HM2VlLW56Y2sxU1ZrenRuUXhwTXVQT1pGek5YRjZDdFQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Choreo LLC Has $5.12 Million Stock Position in Synopsys, Inc. $SNPS - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihgFBVV95cUxQbklVY19qYlBDT0VDMjMtTnRkQjhXZzJuNlhka2M1QzFzN1FkM1pFVEdYM0phQkpkenZjeTVDbXE4a1phZ2loSmdDVUJZT3FXanFHTmNuWEZrNnVRUU1nNkJvUHY0SFFzYml4RG1pWTVjU3RuQmdlT3BFSUNCb1BXa1dGcDN4Zw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Wall Street Analysts See Synopsys (SNPS) as a Buy: Should You Invest? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihAFBVV95cUxPNW16c1N3RGwzcVdPckJjMFRiSnNyVEtMUDZST1ptZXA0OWFUQVBFbC1UWE9HSzAyS1pJZkxzZ1JVUnFSNGFMa2VRUjl3NWtfWVNMSXVKbm9iSEVPSXBuR0R6RDRHSDlhbXQ4SkJQREJCSVljMFVZaVpuc3VsNVNKUmRIWFQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys (SNPS) Stock Sinks As Market Gains: Here's Why - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-17
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMipgFBVV95cUxNbDI4WnljdTdCZnh3MER4d0F3UHktLXgxNTB2QWI3RDRzTUNzNXUtMEhSZWN0ZWNlY0JDUjhKTE4tMFd5ODE5MG5vWlNYOWhhTmRSdHlvaXViakRuZGdhOExIVm52dzZMdklraTVnanFYMDFZS1NLdjFwOGhwZy12VXl0NzVIcG44RkZHb2FTM19FSVFvOHRfZlYyYzlCdjUtMHlGaXpn?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys (SNPS) stock price at $414: why shares fell and what Wall Street watches next - TechStock²
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TechStock² • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiiAFBVV95cUxOYWxxVFNoOGczVzB2ZkwxWlZlZkZGdGM0ZnM0SFlray13dlBwYzFORzVsbEpCY2J4dUFXbUZ5TTl6TVd4MVJDaUFDQnczcW9KSGw4OENYZjU4RXNraEsxODVMNVFaelVfMFNIel9MaV8yNVRJajE4c21jQVg0VTFlcUxUVV9VeV9K?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Compared to Estimates, Synopsys (SNPS) Q1 Earnings: A Look at Key Metrics - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixgFBVV95cUxOdGlsUEZ4bnQwQW56ZlhEUTRVM1JhaVNGSzVKM2hPa2FIbExZUjdHTWFzUXNNTkNZWHJoQlpqRnNySkZSSXIxUmlBamxrbk1JQURoMy05dXJ2a1Z2cUZnRjBfejhOcTJGRTZucVRUVE1PRVBfRFJDTzM1Wk5ybWhJTU1CcTRlMTJMeVJoeEVLQmJ3NG9EeWRNMFpLUDFoVnRMQ2FCcTFBcUMtT2tKM0swbFhpSktVY2t2SWFzVEZ6NG5BM3FQdWc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            US Bancorp DE Has $59.70 Million Stock Holdings in Synopsys, Inc. $SNPS - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiygFBVV95cUxON0lPT3YxR1BzeDZla1dVa1ZuSWNaSVYtRkVSc18wQXk1ZTRLaF9DQUI1RjB2cmt2T0lYLWN1SHlMaUNLLXJ3SmxxcEZ3Z0s3UFBRcUdNWHlDbkFvQ0tTU3MwWGk0TkFUdnpXQkdaVWVZbWRERE5sSEJTWm9DTFg3SlpZT1p6M3BnQXNjU1ZmN0VCWmFVRUYtWFNNbTQ3ZzdaVldyNXVSdl9yTDl6NTlqSXFXZVZtZHI4RVJ2M1hYdW9NRWVJNWdNbGlR?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Harvest Portfolios Group Inc. Cuts Stock Position in Synopsys, Inc. $SNPS - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxNYXpuaVF1N2RNS1doWTJQVFVvYlRjWk1lcEFZNjRMemRudWdqLUxBS2JFaW5VZWhSTEtmOENPZ3JsblRSeEpMT3hKekVuTGR2eTR0VnJTZ1BaLTFkaGE2bHI2eXVWYUl6RVlSdzFiN2lpNHBWeXpmTDJZT0otVEQyc29wQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Synopsys (SNPS) Beats Q1 Earnings and Revenue Estimates - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi9wFBVV95cUxQelZPU1o5UW1DNnIwMi1pXzllSmJSUXAyVFM1ZXNqQ3V5Um9xNHozeU10STJkTWVrRzhrc3JYRGQyMld2OVlhMkNuSl9uWnJCT1N0SHNiUXpYSElVUS12dExwS1JOSV9XZ010NGtxMWpndnBmUkpMbGh6Yk9oN3Nnc3ZWNmdIX3N0Zmd1RHpRdS10VWdIcG1tb2Vxd3VsWWpvUVVYT2txLU1MOHhjUkROSUVTZWxlSldHNHNiWlBnekpSMWg5YUUyamF4OUFwODg2Sm84eUJtVFRrSGdhaWdUWGFrUThTQk1aVG9MYVVfUVUteVlHZzdZ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CRM, TTD, SNPS: Software Stocks Crack In Premarket After Downbeat Earnings, Extending Weeks-Long Selloff - Stocktwits
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Stocktwits • 2026-02-26
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📈</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">82% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 19 news articles: 8 positive, 2 negative, 9 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+<div id="ticker-CRWV" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - CRWV</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">CRWV</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bearish">
+                    BEARISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for CRWV is bearish for the next 1-2 weeks. News sentiment is negative.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BEARISH sentiment is based on analysis of 15 recent news articles, with 5 (33%) showing negative sentiment, 2 (13%) positive, and 8 (53%) neutral.</strong><br><br><strong>Key Negative Indicators:</strong><br>1. <em>"CRWV: CoreWeave Stock Falls 9% on Timid Guidance, Big Debt Pile - TradingView"</em> (TradingView) - This article reflects negative market sentiment.<br>2. <em>"Why CoreWeave (CRWV) Is Down 12.4% After Hiking 2026 AI Capex And Posting Wider Losses - simplywall...."</em> (simplywall.st) - This article reflects negative market sentiment.<br>3. <em>"CoreWeave (CRWV) Stock: Analyst Price Targets Cut After Q4 Miss on EPS - CoinCentral"</em> (CoinCentral) - This article reflects negative market sentiment.<br><br><strong>Note:</strong> Despite the overall bearish sentiment, 2 articles showed positive signals, including:<br>• <em>"CoreWeave: From Growth Story To Capital Story (NASDAQ:CRWV) - Seeking Alpha"</em> (Seeking Alpha)<br>• <em>"CoreWeave (CRWV) Stock Down 16% Today Despite 110% Revenue Growth — What Spooked..."</em> (TipRanks)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Negative news coverage (5/15 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">15</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (15 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivwFBVV95cUxOdm9UNHdNcG5nMnRobG41bE5Xak9lUWFkQ2puWUZTbHA4X3RlVGlucHoycXFPcy14S2NCYUU1aTA0WjNXYmI2WHNCRUdibEt6b0tyNkduSFpFb0cwem9VUTg3WEtZaGlIQUwxbHF1dzlBZmZJTlBEd3hwZjd4UlQxUzF3LS1QSnN1WGU3eU9iOWtrTm1QdVBqRHNSWTNPN0FLRlc4N3A1SEVEWTEwWnRJWjVYSkdsSnlFWDJHbUFnSQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CRWV: CoreWeave Stock Falls 9% on Timid Guidance, Big Debt Pile - TradingView
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TradingView • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMihgFBVV95cUxNdUJUem5FUzZRUjhfU1A4NU9FdFZPQVE2MTU0WW1LUjgtVmJDOVJzMXgycklXOHRURzNXTmZRck5xYUYyQThSdUptSElYSUV6WDdyWlp4UVljenczQmVvN1czU2dYT2U1RkhxTXdlZ2h4LW05MjJ5NjhPR09ubFFrSlhEb3hpUQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Jim Cramer Discusses NVIDIA’s Stake In CoreWeave (CRWV) - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixAFBVV95cUxPUHQ4Y182Y095S3A3Qkg2cWU3dG5XNWMtMVRVVDA0QmREWUR3bWNubTNiWmo2SUdOYWpVM19LSXNpUDVEa0lJdDBmQ3RhdjlYXzlQNnZIel9aTmpPN2JwREt3bVRwZjVpS1NqbzFLQ2tKdXJnX0hYLW1Qdko4VlU1Z292YnpBRHFlX0o4dHFYTjJ6X25GcjdyR0FQR1dyUVozMFN6OTRfVFFMelRNVXZYZzFDRHEzbzVtQ3ZYc1YtTW5JRHh3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            ‘This Is Not Enough’ – CoreWeave Stock (CRWV) Gets Hammered as Analysts Praise Backlog but Cut Targets - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMijgFBVV95cUxOdVFxanlVTHhJeDNoWkNCdHNUWlplelVRdTZBckE4MlU3eTB0MDhsLW53ZkQ3dl8tTkZPMTY1YnNzM3lpclFOZXVLVmFVV3E0cC1MS19sOTVTakRxYWVSRGFVbVJsc3kxd1lrTnktRkdlYmp4dWl0SFVYZFR4QlRySkstMzQzaHpNYXVfbUR3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave: From Growth Story To Capital Story (NASDAQ:CRWV) - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Seeking Alpha • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi3wFBVV95cUxPa2FFUHhDNlNTMEl5T0xRclpEWTlEaTJyRWp4OFpESjQ4dk14cnI1WXNHbW4xdDVaNlUwZ3Jnc0pPT2x6WUpUcmlrWEhuXzItMTh4bG1yLUdDMlVMMEdpX2RxMXMwZ0l2VXdQQk5CalFZU29reGh3enZVeWR5Y1k1YWJJaGF3di10aHRTd3NrcEw1ZVZBNXZHNTRJMnBiV3hJVnBmbUJWRFoxRjdFb1BvWWdndEdJTVlPclpUb0tuNXgwQ2xZaWZia3RlbkgtdW9laVB5cDNYcmNPZTBxZncw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CRWV Stock Slips Premarket After Michael Burry Revives Dot-Com Parallels — Wall Street Still Bets On Massive Upside - Stocktwits
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Stocktwits • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMixwFBVV95cUxPZ0xWYUJFalMzXzdvR0tvOWVUNFhjSU50bnRCekQ0eGVSM05xZTlta0JjSDgxeEF5R2hiMXlQcTN1S254X3BzLXN4Q3R2WmE1Y0lDN00zb1JMR0xGckZXdFFWUEhjRXF4clhkc2ttZzJlREdUdDRzNzNJcjNtYnNfeDNlVHJKX05QOHVMUWFqUUlKZk1ZVnQzSVNsT09MM0hHNUM4WkZVcUxZZU5VejZPUVVCSUVGd2lYcW5yREtCdjFEQWxtcDJB0gHMAUFVX3lxTE15LUFEM253MkU1dVYyZ3BaUEsyUVptNkxlN1lNelJXdU1Vd2E1M2lMaS1UckxLWWMxMGRxUV9jNklSRzBhcHNUX3NNV2RUSmNoR2YwMDRTbWJQOVNTTndvQ2x0Qmp6Nmx6MEdYcmVpZGF4UEcyMFkxWXVYVGFwZzJhM3NzczczUHFWUldkRkQtUEprQk5hbU9xQWdyaTRJMmNLRVdBTGtEU3M4Y282eUtLbm9reEpQamtpY3VZaGV0elVNbVVYVGdoMDlDYg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Why CoreWeave (CRWV) Is Down 12.4% After Hiking 2026 AI Capex And Posting Wider Losses - simplywall.st
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        simplywall.st • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMilwFBVV95cUxOMUZMZzhlOWJ6eXNoQ2o2SERxTXZBZVlDZk11aFpuTGY0MjI4Sm9teDRpSnN2QnBlSVY5M1FoYzB4UE95UHBoZVFEdUJBZzF5YkpYR1RjaFFuQXVCY2lJSURQTm1WdEU3aGlfTXNtall6aGEyVUFEbGFFWHFWVDVCOHpXemt2bXJPYTU0YzNyQm1ONTBWbkV3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave (CRWV) Stock: Analyst Price Targets Cut After Q4 Miss on EPS - CoinCentral
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        CoinCentral • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMirAFBVV95cUxPajBudkd3Y2l2UGVlVFFzMGRiNEFObTFjenY5TlFDeTJJVW1KTDJ6dWQtNWVfU3ExZUN0M2RsYktTdEtjXzZQSlBZSEJLVURQVWNJQkljTWN5SG91NEg5eWhQbFlXX1dxZmd6NS1PYXJMaUlYRmpZUjh1OFg0Vm5oSDZGZjhYWnh2dWdpemVsVFloSHNDNW1SMkFxd2VlYTc5ejNENGF1WDdkby1l?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave (CRWV) Stock Down 16% Today Despite 110% Revenue Growth — What Spooked Investors - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi2wFBVV95cUxOMTFDckpvRnlLQmh4MExDU1lJel9tX094bjEybnJIUGZpcEpqNGQ3VENyQlM2WjhpZ3lGcmlOVndCRnE2TmhaNmRuSEZZQWVoVnJSMkJYSm5JODkxZzZCTkV1ak1aMFlLR3ROYlYxeGY3NG40Tnl5cHF0MVNkMWFXOWRxeDlOd0Z2Rll4N01VOGxIRWZTVGdESGhaV3ZKWUx1RFNhUUtaSC12UHkza25IenhFN2JwRU54LXFzanpNblN3amdaUEphckEyOGVxenhESnN0SU1XLVJWRjQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Why Did CRWV Stock Tumble In After-Hours Trading Today? - Stocktwits
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Stocktwits • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMigwFBVV95cUxPQy1BZm01VW16T2paV2tTRGI5S1dwUWNvZkRZYmVjd2IyX3VXeGROX2xFWEtuVjl4NW4xXzgwdUh2VldoWGNjbEl2RUdOT1llS3ZtX0ZHYnZoR183NzNFbS04ZjFEVFE2Q0tZNmxTUWxKOXZwb3NYZG5nRl9SZGJCUjhvZw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Should Investors Bet, Hold, or Offload CRWV Stock Before Q4 Earnings? - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-23
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMinAFBVV95cUxPV3RWSUM2c2lEakh3dm9lVVZkYndURWdfQzJkOWtsaTgtNVlta0VCMVFBQzEzWjBVNENCMVBJUjJsejk3U3YtVmM2UklEcDJ1TFRpWXMxcE5Vb0VvTGRPUnhrWTkzR21SVjFaLVRnaVE4ZU5JQmFqSHE5empmZjQ4aWVfd1V6WDFndzh2RXdHYmZ5MTJtRkF3Tm9razE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CRWV Earnings: CoreWeave Stock Drops on Wider-than-Expected Q4 Loss - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiuAFBVV95cUxQV3hRUWswcTQ1Z1Zrd1U5X2VCVVlQZHF5Z241aV91N3ZlYi1tbFhMWEpMWnZOZ01Gb1QydjY5azFrSXMtbnlRdVRYRFpFWE9CcWljN0pyaFRnY3JmTndwNDlCSElWNkhpSlhEMDJIMzBKbGRCZldBdTgxVVdtOHdEU1RfbjRWMk9PNmJRSXNhSlNUOHBMSDhsY0o4SzBIMGxGeVZwdXkzc1RDSjVrU3MwdGFzcUowNWxD?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave (CRWV) Will Report its Q4 Earnings Today. Here’s What to Expect from the AI Stock - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMivAFBVV95cUxNTGVDdkZVVEhiN1RYX0owMDJjdlV4TDNhSjNYTFlEWGVEeEtfNU9qcHdCM1BrR1NKM0tHdU15ZTZmdnNQYmJDQWJHSElZLVVsZTAtMFdlT3BKSDA0WEh0SzJDNEd5T19hVWU4V2hiS0pWZHJld3dfdUlqaGpUZDBOTVpsUmhvRkZjc0hzMGRXM3ZXRzFDODNUdXJiMUlud2xmQTlhOVZUb3NreGxrdXFlUDJqX2pLcVZVaUhuOQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave Is About to Report Q4 Earnings. Options Traders Expect a 15.72% Move in CRWV Stock - TipRanks
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TipRanks • 2026-02-25
+                    </div>
+                </li>
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiogJBVV95cUxQWHF0cVY0ZTBRSlVrT0ZUV2ttUEc0ZFo5cjI2c0dXUEZkS3JuWUw0M3g0dEYtaUwwbUo0Tk1yeG1Lb2VBeWlQZ2NLZWh1YkM5cEh1NkNmOGw5bWsxQno3d28zQllTVkxNd21ablJjbDJFbk1mS1l5eUQ2bmFfUjhQR295NHpNcThQVHF1V2tWQm1Vdkh4SEw1c2ZTR0VueFFkTXgxd29POFRYU2E2YXNxUmZGcmRLb2dCSDRFZjFRSTZjQjRHem81R0hXWTdmYlVqTjM5OUQzc3U3MG9PMkZSWkpTZElfS2M0QkZ3QjlsWGx2YmtBRmExM1V4d09EVkg5VWY0ZUtFSE1ScXpCYTNac2EtRmk5QVZndmtQWE9LcXMydw?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            $CRWV Stock Decline: CoreWeave, Inc. Investors Notified of Securities Class Action After Significant 16% Stock Drop - Contact BFA Law before March 13 Deadline - TMX Newsfile
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        TMX Newsfile • 2026-02-26
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMilAFBVV95cUxPUU1ENkJnOHhPMU9QdXg3ZXFvd1N6TXM4dTMtSHg5NTd4WlhDc1JHWExqTmNMRmZqTzJTR0V4MDNuUy13TXppaUFjckRTeTBxMW1sUUdMdXdKQ2dYSkFfc2llTkpXVkFmSnFWb0Nsb0xvQ2pzamMySXJoeUg1N1JlM3FKNnBmMXoySW5WYV9ZbjlzRXJD?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            CoreWeave Stock (CRWV) Opinions on Q4 Earnings Report - Quiver Quantitative
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Quiver Quantitative • 2026-02-26
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📉</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">70% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 15 news articles: 2 positive, 5 negative, 8 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+<div id="ticker-UUUU" style="margin-bottom: 40px;">
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Copilot Report - UUUU</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 15px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        .header .ticker {
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+        .header .timestamp {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        .section {
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .sentiment-bearish {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .confidence-high {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+        .confidence-medium {
+            background-color: #fefcbf;
+            color: #744210;
+        }
+        .confidence-low {
+            background-color: #e2e8f0;
+            color: #4a5568;
+        }
+        .summary-text {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+        .factors-list, .risks-list {
+            list-style: none;
+            padding: 0;
+            margin: 8px 0;
+        }
+        .factors-list li, .risks-list li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            font-size: 0.85rem;
+        }
+        .factors-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: bold;
+        }
+        .risks-list li::before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+            color: #dd6b20;
+        }
+        .news-stats {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            flex: 1;
+            min-width: 85px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .stat-positive .stat-number { color: #38a169; }
+        .stat-negative .stat-number { color: #e53e3e; }
+        .stat-neutral .stat-number { color: #718096; }
+        .article-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .article-item {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #f7fafc;
+            border-radius: 4px;
+            border-left: 2px solid #e2e8f0;
+        }
+        .article-item.positive { border-left-color: #38a169; }
+        .article-item.negative { border-left-color: #e53e3e; }
+        .article-item.neutral { border-left-color: #718096; }
+        .article-headline {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+        }
+        .article-meta {
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .signal-item {
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+        .signal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .signal-direction {
+            font-size: 1.2rem;
+        }
+        .signal-source {
+            font-weight: 600;
+            text-transform: capitalize;
+            font-size: 0.85rem;
+        }
+        .signal-strength {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: #718096;
+        }
+        .signal-reasoning {
+            font-size: 0.85rem;
+            color: #4a5568;
+            line-height: 1.4;
+        }
+        .missing-section {
+            background: #fffaf0;
+            border: 1px solid #ed8936;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin: 8px 0;
+        }
+        .missing-section-title {
+            color: #c05621;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .missing-section-text {
+            color: #744210;
+            font-size: 0.8rem;
+        }
+        .disclaimer {
+            background: #edf2f7;
+            padding: 15px;
+            font-size: 0.75rem;
+            color: #4a5568;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .back-to-top {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .back-to-top a {
+            color: #4299e1;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .back-to-top a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 8px;
+                font-size: 13px;
+            }
+            .header {
+                padding: 15px;
+            }
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            .header .ticker {
+                font-size: 1.6rem;
+            }
+            .section {
+                padding: 12px;
+            }
+            .news-stats {
+                flex-direction: column;
+            }
+            .stat-box {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Trading Copilot Analysis Report</h1>
+            <div class="ticker">UUUU</div>
+            <div class="timestamp">Generated: 2026-03-02 14:30 UTC</div>
+        </header>
+
+        <section class="section" id="executive-summary">
+            <h2 class="section-title">Executive Summary</h2>
+            <div>
+                <span class="sentiment-badge sentiment-bullish">
+                    BULLISH
+                </span>
+                <span class="confidence-badge confidence-high">
+                    HIGH Confidence
+                </span>
+            </div>
+            <p class="summary-text">Overall outlook for UUUU is bullish for the next 1-2 weeks. News sentiment is positive.</p>
+            
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f7fafc; border-left: 3px solid #4299e1; border-radius: 6px;">
+                <h3 style="font-size: 0.95rem; color: #2d3748; margin-bottom: 10px; font-weight: 600;">
+                    📊 Sentiment Rationale
+                </h3>
+                <div style="font-size: 0.85rem; color: #4a5568; line-height: 1.6;">
+                    <strong>The BULLISH sentiment is based on analysis of 12 recent news articles, with 6 (50%) showing positive sentiment, 1 (8%) negative, and 5 (42%) neutral.</strong><br><br><strong>Key Positive Indicators:</strong><br>1. <em>"Energy Fuels: Buy A Unique, Future Western Rare Earths Heavyweight (NYSE:UUUU) - Seeking Alpha"</em> (Seeking Alpha) - This article reflects positive market sentiment.<br>2. <em>"Energy Fuels (NYSEAMERICAN:UUUU) Stock Price Expected to Rise, HC Wainwright Analyst Says - MarketBe..."</em> (MarketBeat) - This article reflects positive market sentiment.<br>3. <em>"TD Asset Management Inc Grows Stock Holdings in Energy Fuels Inc $UUUU - MarketBeat"</em> (MarketBeat) - This article reflects positive market sentiment.<br><br><strong>Note:</strong> Despite the overall bullish sentiment, 1 articles expressed concerns, including:<br>• <em>"Energy Fuels (UUUU) Reports Q4 Loss, Tops Revenue Estimates - Yahoo Finance"</em> (Yahoo Finance)<br>
+                </div>
+            </div>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Key Factors</h3>
+            <ul class="factors-list">
+                
+                <li>Positive news coverage (6/12 articles)</li>
+                
+                <li>Strong news signal</li>
+                
+            </ul>
+            
+            
+            
+            <h3 style="margin-top: 20px; font-size: 1rem; color: #2d3748;">Risks</h3>
+            <ul class="risks-list">
+                
+                <li>Incomplete analysis: missing earnings, macro data</li>
+                
+            </ul>
+            
+        </section>
+
+        <section class="section" id="news-findings">
+            <h2 class="section-title">News Findings</h2>
+            
+            <div class="news-stats">
+                <div class="stat-box">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Total Articles</div>
+                </div>
+                <div class="stat-box stat-positive">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">Positive</div>
+                </div>
+                <div class="stat-box stat-negative">
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Negative</div>
+                </div>
+                <div class="stat-box stat-neutral">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Neutral</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 0.9rem; color: #2d3748; margin-bottom: 10px;">Recent Headlines (12 articles)</h3>
+            <ul class="article-list">
+                
+                <li class="article-item negative">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMif0FVX3lxTFBrMk0xZ21SNGxrbWFQb3pGa3RGaERIRHVGY0VSSlE0OVRnQ2NGQXY5SkM0NUoyS05QcUxVNEJFLXVjQlRqQzQxTGVXWWlUNTAwcUJBa0pzMWxNdlZfZ3dwYkJzVEFTSkNFaFpsWmEtVnN2dGZReG5NZEgydHVYQjg?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels (UUUU) Reports Q4 Loss, Tops Revenue Estimates - Yahoo Finance
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Yahoo Finance • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiqAFBVV95cUxQQjhZRXk5clNRUkszUGxOTEkzNXYyM0lQNUhqb3J0RTdQcVF5b25IU0JMVlVIZGU3aEZwZ1dqZDlfUm9qZXhERzgyTHJ3YkdqcmZrVDZUSTFoZ1Z1ZVlrZkFPZkdDYmI1WFR1d2tOUF9DY1JJalFUWGMwTndFQUttWFB3RUEta3RVdFhZTVRacHdtclJiZUpjdWVpcGVMUG1jU0JOSk1PWms?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels: Buy A Unique, Future Western Rare Earths Heavyweight (NYSE:UUUU) - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Seeking Alpha • 2026-03-02
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi1gFBVV95cUxQX1NGYnRTMWVLa0k4OGF0MXExQ3BkQVR0WXV5RlVDU213enZqd085MXd1bzNSOGdiRU9TSjUyVEMxczFIQi1OQ0NQUmxBMDZGb2hndmZyaXl3M1FxdHVtbjFLTnMzUFl4aTFkazNsa0tXQW1xckQ2ckxKc1Q5bDJpNUJNcFg2MUZkQVlYRXkzNV81Sk5tVC1iUG42cmhxVmdRSXBHWVBwbmhadnJ2WkpfRzVseXBvWmF2czBzaDhQQmo4Q2dmZFdCR21YbF81V3BjYVdpV0tB?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels (NYSEAMERICAN:UUUU) Stock Price Expected to Rise, HC Wainwright Analyst Says - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiVkFVX3lxTFBubzhETzhyX2RqMVhydk1IVUEycTg0cHlGeVNYTjhQNWcycjl4cldUaURFdE9hS25Hd2NINUd0VmpKaUt5VFkzN2tDUGRsdUpaamttU2p3?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            UUUU Financials: Income Statement, Balance Sheet & Cash Flow - Stock Titan
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Stock Titan • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiygFBVV95cUxPZGFTSHJkQk52TTAyV3paRzd1el9WYzBBaVdPZlFFMDlVc1pnXzh3dkJjZWNDa0JRcHBQd01YYWp4Y1dXbVlEN2Y1VlRnQVF1MWpZSGc4U2tZMk9lcFlacnFKWHBFY2t3ODBiaENWeDc4anNHdllBV2YtWWpDbWJXRW93bGgtTG9sZEg4bk1SU2h6b3d5Wk1IcXRDNTZScnFpdlMyZ2Z2RVl4eUdHaDE0SG9neERXSWExRVpYOEljanpVLURuVTFIRU1n?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            TD Asset Management Inc Grows Stock Holdings in Energy Fuels Inc $UUUU - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMikgFBVV95cUxNU1pFbDY5MGo1TEVrSkQzUXdqUUFBWE1fd28yM290dU1qeUxRWVpMYlBHMVA4Q3VFN1dRRVAwXzJqTWVhZE4ycmhKS1JnN1JfMzdDbUdld2x0WlRZd3dVSEg1aElvRzdrdXpYc0FVOVNoZlZnaUNhaHFHVGJ0TGlHSGtEcUNTV0lVaV8zQW5tYmNMQQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels: Big Gains But Stretched Valuations (NYSE:UUUU) - Seeking Alpha
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Seeking Alpha • 2026-02-28
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMioAFBVV95cUxQYTlmdk5IWXNFZFBwOTIzVjlCNVZjbDd0MUtwZjR2Y3JoeGRUSDFPck1CUHRqRjB2cW9MalMzX3NVTlhyMzZkSlR0LXVSWklURk8zV1dQQlRZRjhjSTUtblFyVjh5cDRIemFJcFhZcW1qd1psbWl1cXFnTnFWM1l4UlUxcnBDTVpiVW1jeV9XWkdrdkpickdiMmNKLWctZlVP?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            $UUUU stock is down 3% today. Here's what we see in our data. - Quiver Quantitative
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        Quiver Quantitative • 2026-02-23
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiwgFBVV95cUxOWmVBZlpubW5sTFdyZE51b3MzdVRXNG9RVXBMR2pGUzJoUFI0RUhaTjk4MFZ6Wlc5Ujk3ckFucnhaWXdQMzh3OEdlNzI3X0FVV2pGdWViZWh4blJaMXRBclhMTmhKbmpqZGhwRmMwR216ak9yTUMzQzZ1SkZGb3BVODdvcVUyODJJcks3eGtBSnJ5VXZnaXBJVjdGR2c2RS1kSHJjZE0xemtxam5YckxmZFlWdVpQZ0NHY0VwOTBORHB4QQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels Inc $UUUU Shares Acquired by HighTower Advisors LLC - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiZ0FVX3lxTE0yemVIcXJobWllS0NIZWhnNUkyMFZHandzQS1NTmQzcEczMlpzMGx4U0tvdk9QcUNFUDlydmcwSnFZaXg0Wlo5ZWtWY0hUNGt1VW11TzZGTmxTeFpLd1J5X2pyYjdVTkE?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            UUUU SEC Filings - Energy Fuels 10-K, 10-Q, 8-K Forms - Stock Titan
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        UUUU SEC Filings • 2026-02-25
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMiwAFBVV95cUxQbFRFU0p6Z1RRQUNIN19fbHQzcDVxR0NNSGZMVi1zZVRxM3dPOUNIcERST0tYMFhnVFJ1RFZzREI0QUVmWU9mWUFaOWpaakRneDZySHluMmNyZnRjT0NSa3QzdHFBQTdEZGNyTnZvRTdiWmNRN0h3empjSlR3dS1tWkN5R0VUdGc5b3pQckI0M1V3M0lqeWVCb2l2Q1ZqVmhsajR3SUxISWNKMWdJcm5IZk15bXUtUlVmOTdadUFNODc?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels (NYSEAMERICAN:UUUU) Shares Gap Down Following Weak Earnings - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+                <li class="article-item positive">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi1gFBVV95cUxOazNrcjIzNHNhRXZleWxKNm5GMnJSc1dEMUZOZUdTVkpFSllDbWFPdkQyX0doYTFhRnVfcERpVm5IUHFUWXpudldlUG1qbFM0eVdrd3d1ZGJheWhBOUZJa3loLWFDaUtqZFRUcmFjWF8zOEhLcENlb1g4LWdpWTRHY2llcEVoelEtUGRxTWY2TjZUX1k3Q0R1Y0puSG45Wk5COG1Ta192eXlYVFpWd3kwVk1ucHVsa2NJZy1TdGtYdnBZS01POTYzUzVBZ2xrT3JsVzdQOGFn?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Monashee Investment Management LLC Buys Shares of 150,000 Energy Fuels Inc $UUUU - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-03-01
+                    </div>
+                </li>
+                
+                <li class="article-item neutral">
+                    <div class="article-headline">
+                        
+                        <a href="https://news.google.com/rss/articles/CBMi5gFBVV95cUxQbmxzcHNnTi1NZXcwUlJIdFVoWWsyV2otMXlia2V0eWJScjA0czBUZ3FhZlJQVy1QODdZSkZocnNlSHp0N0JsOE9xVHpBWktHNWxUSUFJeWx1U2hqbzRyRGhveEFrYXhJYUY1S0M2dTNES20tMU0td1J0QjRMd2ZlWC1YbHdaN1hzQmxlX2ZadGxSZ09sTl8zVktlVkw2SWx2R3ZUS3VUNFBLejNhUGNLVVZONFJmX1N1d1RLVzVhdkJhdmFaSG0yZnppZnBsaC0wdlRyZ2J6bzN2WTFOT2s5VXNfNmk1QQ?oc=5" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            Energy Fuels (NYSEAMERICAN:UUUU) Announces Quarterly Earnings Results, Misses Expectations By $0.05 EPS - MarketBeat
+                        </a>
+                        
+                    </div>
+                    <div class="article-meta">
+                        MarketBeat • 2026-02-27
+                    </div>
+                </li>
+                
+            </ul>
+            
+        </section>
+
+        
+        <section class="section" id="earnings-analysis">
+            <h2 class="section-title">Earnings Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Earnings Data Unavailable</div>
+                <div class="missing-section-text">Earnings data could not be retrieved. The earnings agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        
+        <section class="section" id="macro-analysis">
+            <h2 class="section-title">Macro Analysis</h2>
+            
+            <div class="missing-section">
+                <div class="missing-section-title">⚠ Macro Data Unavailable</div>
+                <div class="missing-section-text">Macro analysis could not be retrieved. The macro agent encountered an error during execution.</div>
+            </div>
+            
+        </section>
+        
+
+        <section class="section" id="sentiment-recommendation">
+            <h2 class="section-title">Sentiment Recommendation</h2>
+            
+            <h3 style="font-size: 1rem; color: #2d3748; margin-bottom: 15px;">Signal Analysis</h3>
+            
+            <div class="signal-item">
+                <div class="signal-header">
+                    <span class="signal-direction">📈</span>
+                    <span class="signal-source">news</span>
+                    <span class="signal-strength">92% strength</span>
+                </div>
+                <div class="signal-reasoning">Based on 12 news articles: 6 positive, 1 negative, 5 neutral.</div>
+            </div>
+            
+            
+        </section>
+
+        <footer class="disclaimer">
+            This analysis is for informational purposes only and is not financial advice. Past performance does not guarantee future results. Always conduct your own research and consult with a qualified financial advisor before making investment decisions.
+        </footer>
+    </div>
+</body>
+</html>
+    <div style="text-align: center; padding: 15px; background: white; border-radius: 6px; margin-top: 20px;">
+        <a href="#top" style="color: #4299e1; text-decoration: none; font-size: 0.9rem; font-weight: 500;">
+            ↑ Back to Summary
+        </a>
+    </div>
+</div>
+</body>
+</html>

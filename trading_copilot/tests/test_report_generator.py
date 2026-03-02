@@ -317,3 +317,79 @@ class TestEvaluationReportGenerator:
         assert "</body>" in html
         assert "<title>" in html
         assert "</title>" in html
+
+    def test_report_contains_gradient_header(
+        self,
+        report_generator: EvaluationReportGenerator,
+        sample_metrics: EvaluationMetrics,
+        sample_results: list[EpochResult],
+        sample_config: EvaluationConfig,
+    ) -> None:
+        """Test that report contains gradient header matching trading-copilot styling."""
+        html = report_generator.generate(sample_metrics, sample_results, sample_config)
+        
+        # Check gradient styling
+        assert "linear-gradient(135deg, #1a365d 0%, #2c5282 100%)" in html
+        # Check header structure
+        assert 'class="header"' in html
+        assert "Evaluation Report" in html
+
+    def test_report_contains_section_divider(
+        self,
+        report_generator: EvaluationReportGenerator,
+        sample_metrics: EvaluationMetrics,
+        sample_results: list[EpochResult],
+        sample_config: EvaluationConfig,
+    ) -> None:
+        """Test that report contains section divider matching trading-copilot format."""
+        html = report_generator.generate(sample_metrics, sample_results, sample_config)
+        
+        # Check section divider
+        assert 'class="section-divider"' in html
+        assert "Detailed Analysis by Epoch" in html
+
+    def test_report_contains_back_to_top_navigation(
+        self,
+        report_generator: EvaluationReportGenerator,
+        sample_metrics: EvaluationMetrics,
+        sample_results: list[EpochResult],
+        sample_config: EvaluationConfig,
+    ) -> None:
+        """Test that report contains back-to-top navigation links."""
+        html = report_generator.generate(sample_metrics, sample_results, sample_config)
+        
+        # Check top anchor
+        assert 'id="top"' in html
+        # Check back-to-top link
+        assert 'href="#top"' in html
+        assert "Back to Summary" in html
+
+    def test_report_contains_epoch_anchor_ids(
+        self,
+        report_generator: EvaluationReportGenerator,
+        sample_metrics: EvaluationMetrics,
+        sample_results: list[EpochResult],
+        sample_config: EvaluationConfig,
+    ) -> None:
+        """Test that report contains anchor IDs for each epoch."""
+        html = report_generator.generate(sample_metrics, sample_results, sample_config)
+        
+        # Check epoch anchor IDs
+        assert 'id="epoch-1"' in html
+        assert 'id="epoch-2"' in html
+        assert 'id="epoch-3"' in html
+
+    def test_report_contains_mobile_responsive_media_queries(
+        self,
+        report_generator: EvaluationReportGenerator,
+        sample_metrics: EvaluationMetrics,
+        sample_results: list[EpochResult],
+        sample_config: EvaluationConfig,
+    ) -> None:
+        """Test that report contains mobile-responsive @media queries."""
+        html = report_generator.generate(sample_metrics, sample_results, sample_config)
+        
+        # Check media query presence
+        assert "@media (max-width: 768px)" in html
+        # Check responsive styling adjustments
+        assert "grid-template-columns: repeat(2, 1fr)" in html

@@ -2,13 +2,14 @@
 
 ## Overview
 
-The Trading Copilot is a multi-agent system that provides stock sentiment analysis by orchestrating specialized research agents. The system follows an agent-based architecture where a central orchestrator coordinates News, Earnings, and Macro agents to gather data concurrently, then synthesizes findings into a sentiment recommendation delivered via email.
+The Trading Copilot is a multi-agent system that provides stock sentiment analysis by orchestrating specialized research agents. The system follows an agent-based architecture where a central orchestrator coordinates News, Earnings, Macro, and Reddit agents to gather data concurrently, then synthesizes findings into a sentiment recommendation delivered via email.
 
 The architecture prioritizes:
 - **Modularity**: Each agent is independent and can be developed/tested in isolation
-- **Resilience**: Partial failures don't block the entire pipeline
+- **Resilience**: Partial failures don't block the entire pipeline; web search fallback ensures data availability
 - **Extensibility**: New data sources and agents can be added via configuration
-- **Traceability**: All recommendations are logged with full rationale for historical analysis
+- **Traceability**: All recommendations are logged with full rationale and source citations for historical analysis
+- **Source Attribution**: All findings include valid URLs linking to original sources
 
 ### Technology Stack
 
@@ -18,9 +19,11 @@ The architecture prioritizes:
 - **Database**: SQLite for MVP (easily upgradeable to PostgreSQL)
 - **Email**: SMTP with HTML templates (or Amazon SES for production)
 - **Data Sources**: 
-  - News: Alpha Vantage News API, Finnhub News
+  - News: Google News RSS, CNBC RSS, Wall Street Journal RSS, Bloomberg RSS, MarketWatch RSS
   - Earnings: Alpha Vantage Earnings, Financial Modeling Prep
   - Macro: FRED API (Federal Reserve Economic Data)
+  - Reddit: Reddit API, Google Search fallback for r/wallstreetbets, r/stocks, r/investing
+- **Fallback**: Web search via RSS feeds and Google Search when API keys unavailable
 
 ## Architecture
 
@@ -42,12 +45,14 @@ flowchart TB
         NewsAgent[News Agent]
         EarningsAgent[Earnings Agent]
         MacroAgent[Macro Agent]
+        RedditAgent[Reddit Agent]
     end
     
     subgraph DataSources[External Data Sources]
-        NewsAPI[News APIs]
+        NewsAPI[News APIs<br/>Google News, CNBC,<br/>WSJ, Bloomberg]
         EarningsAPI[Earnings APIs]
         MacroAPI[Macro APIs]
+        RedditAPI[Reddit API]
         WebSearch[Web Search<br/>Fallback]
     end
     
@@ -65,6 +70,7 @@ flowchart TB
     AgentCoordinator --> |concurrent| NewsAgent
     AgentCoordinator --> |concurrent| EarningsAgent
     AgentCoordinator --> |concurrent| MacroAgent
+    AgentCoordinator --> |concurrent| RedditAgent
     
     NewsAgent --> |primary| NewsAPI
     NewsAgent --> |fallback| WebSearch
@@ -72,10 +78,13 @@ flowchart TB
     EarningsAgent --> |fallback| WebSearch
     MacroAgent --> |primary| MacroAPI
     MacroAgent --> |fallback| WebSearch
+    RedditAgent --> |primary| RedditAPI
+    RedditAgent --> |fallback| WebSearch
     
     NewsAgent --> Aggregator
     EarningsAgent --> Aggregator
     MacroAgent --> Aggregator
+    RedditAgent --> Aggregator
     
     ConfigFile --> Agents
     
@@ -100,6 +109,7 @@ sequenceDiagram
     participant NA as News Agent
     participant EA as Earnings Agent
     participant MA as Macro Agent
+    participant RA as Reddit Agent
     participant S as Sentiment Analyzer
     participant R as Report Generator
     participant E as Email Service
@@ -117,11 +127,13 @@ sequenceDiagram
         O->>NA: research(ticker)
         O->>EA: research(ticker)
         O->>MA: research(ticker)
+        O->>RA: research(ticker)
     end
     
     NA-->>O: NewsOutput
     EA-->>O: EarningsOutput
     MA-->>O: MacroOutput
+    RA-->>O: RedditOutput
     
     O->>H: get_history(ticker)
     H->>DB: query
@@ -207,7 +219,7 @@ Base interface and specialized implementations for each research domain.
 
 Each agent implements a fallback strategy for data retrieval:
 
-1. **Primary**: Use configured API sources (Alpha Vantage, Finnhub, FRED, etc.)
+1. **Primary**: Use configured API sources (Alpha Vantage, Finnhub, FRED, Reddit API, etc.)
 2. **Fallback**: If API keys are unavailable or API calls fail, use web search to gather information
 
 ```mermaid
@@ -220,7 +232,7 @@ flowchart TD
     E -->|No| D
     D --> G[Search Web for ticker + topic]
     G --> H[Parse Search Results]
-    F --> I[Return Output]
+    F --> I[Return Output with source URLs]
     H --> I
 ```
 
@@ -228,11 +240,12 @@ flowchart TD
 
 When API keys are not configured or API calls fail, agents fall back to web search:
 
-- **NewsAgent**: Searches for `"{ticker} stock news"` and parses results
+- **NewsAgent**: Fetches from multiple RSS feeds (Google News, CNBC, WSJ, Bloomberg, MarketWatch) and parses results
 - **EarningsAgent**: Searches for `"{ticker} earnings report Q{quarter}"` and `"{ticker} earnings call transcript"`
 - **MacroAgent**: Searches for `"{ticker} sector analysis"` and `"{ticker} macro factors"`
+- **RedditAgent**: Uses Google Search with `site:reddit.com/r/{subreddit}` to find relevant discussions
 
-The web search results are processed by Claude to extract structured data matching the expected output format.
+The web search results are processed by Claude to extract structured data matching the expected output format. All results include source URLs linking to the original content.
 
 ```python
 from abc import ABC, abstractmethod
@@ -250,12 +263,13 @@ class ResearchAgent(ABC):
         Execute research for the given ticker.
         
         Uses API sources if available, falls back to web search otherwise.
+        All outputs include source URLs for traceability.
         
         Args:
             ticker: Validated stock ticker
             
         Returns:
-            ResearchOutput with findings and metadata
+            ResearchOutput with findings, metadata, and source URLs
         """
         pass
     
@@ -277,7 +291,7 @@ class ResearchAgent(ABC):
             query: Search query string
             
         Returns:
-            List of search result dictionaries
+            List of search result dictionaries with title, url, snippet
         """
         pass
     
@@ -287,13 +301,17 @@ class ResearchAgent(ABC):
 
 
 class NewsAgent(ResearchAgent):
-    """Gathers and analyzes market news."""
+    """Gathers and analyzes market news from multiple sources."""
+    
+    # Supported news sources
+    NEWS_SOURCES = ["Google News", "CNBC", "Wall Street Journal", "Bloomberg", "MarketWatch"]
     
     async def research(self, ticker: str) -> NewsOutput:
         """
-        Retrieve news articles from past 14 days.
+        Retrieve news articles from past 14 days from multiple sources.
         
-        Falls back to web search if API keys unavailable.
+        Falls back to RSS feeds if API keys unavailable.
+        All articles include source URLs.
         """
         pass
     
@@ -301,8 +319,16 @@ class NewsAgent(ResearchAgent):
         """Fetch news using configured API sources."""
         pass
     
-    async def _research_via_web_search(self, ticker: str) -> NewsOutput:
-        """Fetch news using web search fallback."""
+    async def _research_via_rss_feeds(self, ticker: str) -> NewsOutput:
+        """
+        Fetch news using RSS feeds from multiple sources.
+        
+        Sources: Google News, CNBC, WSJ, Bloomberg, MarketWatch
+        """
+        pass
+    
+    def _combine_sources(self, results: dict[str, list[NewsArticle]]) -> list[NewsArticle]:
+        """Combine articles from multiple sources into unified list."""
         pass
     
     def categorize_sentiment(self, article: NewsArticle) -> ArticleSentiment:
@@ -322,6 +348,7 @@ class EarningsAgent(ResearchAgent):
         Retrieve most recent earnings call data.
         
         Falls back to web search if API keys unavailable.
+        Includes source URL to earnings report/transcript.
         """
         pass
     
@@ -346,6 +373,7 @@ class MacroAgent(ResearchAgent):
         Analyze macro factors relevant to ticker's sector.
         
         Falls back to web search if API keys unavailable.
+        Includes source URLs for all macro data.
         """
         pass
     
@@ -359,6 +387,47 @@ class MacroAgent(ResearchAgent):
     
     def identify_sector(self, ticker: str) -> Sector:
         """Determine the sector for macro analysis context."""
+        pass
+
+
+class RedditAgent(ResearchAgent):
+    """Gathers sentiment from Reddit discussions."""
+    
+    # Target subreddits for stock discussions
+    TARGET_SUBREDDITS = ["wallstreetbets", "stocks", "investing", "StockMarket"]
+    
+    async def research(self, ticker: str) -> RedditOutput:
+        """
+        Retrieve Reddit posts mentioning the ticker from stock-related subreddits.
+        
+        Falls back to Google Search with site:reddit.com if API unavailable.
+        All posts include URLs to original Reddit threads.
+        """
+        pass
+    
+    async def _research_via_api(self, ticker: str) -> RedditOutput:
+        """Fetch Reddit posts using Reddit API."""
+        pass
+    
+    async def _research_via_google_search(self, ticker: str) -> RedditOutput:
+        """
+        Fetch Reddit posts using Google Search fallback.
+        
+        Searches: site:reddit.com/r/{subreddit} {ticker}
+        """
+        pass
+    
+    def categorize_sentiment(self, post: RedditPost) -> ArticleSentiment:
+        """
+        Classify Reddit post sentiment based on content and engagement.
+        
+        Uses Reddit-specific keywords (moon, rocket, tendies, etc.)
+        and engagement metrics (upvotes, comments).
+        """
+        pass
+    
+    def deduplicate(self, posts: list[RedditPost]) -> list[RedditPost]:
+        """Remove duplicate posts (same URL or substantially similar title)."""
         pass
 ```
 
@@ -383,11 +452,11 @@ class SentimentAnalyzer:
         Produce sentiment analysis from aggregated data.
         
         Args:
-            aggregated: Combined output from all agents
+            aggregated: Combined output from all agents (news, earnings, macro, reddit)
             history: Past recommendations for context (optional)
             
         Returns:
-            SentimentResult with classification and rationale
+            SentimentResult with classification, rationale with citations, and source references
         """
         pass
     
@@ -398,11 +467,27 @@ class SentimentAnalyzer:
     ) -> ConfidenceLevel:
         """Determine confidence level based on signal alignment and history."""
         pass
+    
+    def generate_rationale(
+        self,
+        sentiment: Sentiment,
+        news: NewsOutput | None,
+        earnings: EarningsOutput | None,
+        macro: MacroOutput | None,
+        reddit: RedditOutput | None
+    ) -> str:
+        """
+        Generate sentiment rationale with explicit citations from sources.
+        
+        The rationale cites specific headlines, earnings data, macro factors,
+        and Reddit discussions that support the sentiment classification.
+        """
+        pass
 ```
 
 ### 5. Report Generator
 
-Creates HTML reports from analysis results.
+Creates HTML reports from analysis results with executive summary table and detailed sections.
 
 ```python
 class ReportGenerator:
@@ -410,7 +495,7 @@ class ReportGenerator:
     
     def generate(self, result: SentimentResult, history: HistoricalReference | None) -> str:
         """
-        Generate HTML report.
+        Generate HTML report for a single ticker.
         
         Args:
             result: Complete sentiment analysis result
@@ -421,12 +506,70 @@ class ReportGenerator:
         """
         pass
     
-    def render_executive_summary(self, result: SentimentResult) -> str:
-        """Render the executive summary section."""
+    def generate_full_report(self, results: list[SentimentResult]) -> str:
+        """
+        Generate complete HTML report for multiple tickers.
+        
+        Includes:
+        - Executive summary table at top with hyperlinks to detailed sections
+        - Compact styling with reduced font size
+        - All headlines as hyperlinks to source URLs
+        - Navigation links back to summary
+        - Source URLs for all findings
+        
+        Args:
+            results: List of SentimentResult objects
+            
+        Returns:
+            HTML string with summary table and detailed reports
+        """
         pass
     
-    def render_section(self, section: ReportSection) -> str:
-        """Render a single report section."""
+    def render_executive_summary_table(self, results: list[SentimentResult]) -> str:
+        """
+        Render executive summary table with one row per ticker.
+        
+        Columns: Ticker (hyperlink), Sentiment, Confidence, News Count, Key Signal
+        """
+        pass
+    
+    def render_ticker_section(self, result: SentimentResult, section_id: str) -> str:
+        """
+        Render detailed section for a single ticker.
+        
+        Includes back-to-top navigation link at bottom.
+        """
+        pass
+    
+    def render_news_section(self, news: NewsOutput | None, missing: bool) -> str:
+        """
+        Render news findings section.
+        
+        Headlines displayed as hyperlinks to source URLs.
+        Shows source attribution for each article.
+        """
+        pass
+    
+    def render_reddit_section(self, reddit: RedditOutput | None, missing: bool) -> str:
+        """
+        Render Reddit sentiment section.
+        
+        Post titles displayed as hyperlinks to Reddit threads.
+        Shows subreddit, score, and sentiment for each post.
+        """
+        pass
+    
+    def render_earnings_section(self, earnings: EarningsOutput | None, missing: bool) -> str:
+        """
+        Render earnings section.
+        
+        Correctly displays earnings data when available (not "missing earnings").
+        Includes source URL to earnings report.
+        """
+        pass
+    
+    def render_sentiment_rationale(self, rationale: str) -> str:
+        """Render sentiment rationale with citations."""
         pass
 ```
 
@@ -560,6 +703,7 @@ class AgentType(Enum):
     NEWS = "news"
     EARNINGS = "earnings"
     MACRO = "macro"
+    REDDIT = "reddit"
 
 
 class ArticleSentiment(Enum):
@@ -584,10 +728,10 @@ class ValidationResult:
 @dataclass
 class NewsArticle:
     headline: str
-    source: str
+    source: str  # e.g., "Google News", "CNBC", "WSJ", "Bloomberg"
     published_at: datetime
     summary: str
-    url: str
+    url: str  # Required: URL to original article
     sentiment: ArticleSentiment
 
 
@@ -597,7 +741,8 @@ class NewsOutput:
     articles: list[NewsArticle]
     retrieved_at: datetime
     status: str  # "success", "partial", "no_data"
-    data_source: str = "api"  # "api" or "web_search"
+    data_source: str = "api"  # "api", "rss_feeds", or "web_search"
+    sources_used: list[str] = None  # List of news sources queried
     error_message: str | None = None
 
 
@@ -609,6 +754,7 @@ class EarningsData:
     guidance: str | None
     management_commentary: str | None
     report_date: datetime
+    source_url: str | None = None  # URL to earnings report/transcript
 
 
 @dataclass
@@ -626,6 +772,7 @@ class EarningsOutput:
     retrieved_at: datetime
     status: str
     data_source: str = "api"  # "api" or "web_search"
+    source_url: str | None = None  # URL to earnings source
     error_message: str | None = None
 
 
@@ -635,6 +782,7 @@ class MacroFactor:
     description: str
     impact: str  # "positive", "negative", "neutral"
     relevance: str  # Why this matters for the ticker
+    source_url: str | None = None  # URL to source for this factor
 
 
 @dataclass
@@ -647,15 +795,42 @@ class MacroOutput:
     retrieved_at: datetime
     status: str
     data_source: str = "api"  # "api" or "web_search"
+    source_urls: list[str] = None  # URLs to macro data sources
+    error_message: str | None = None
+
+
+@dataclass
+class RedditPost:
+    """Represents a Reddit post about a stock."""
+    title: str
+    subreddit: str  # e.g., "wallstreetbets", "stocks", "investing"
+    score: int  # Upvote count
+    num_comments: int
+    url: str  # Required: URL to original Reddit post
+    created_at: datetime
+    snippet: str  # Summary or first part of post content
+    sentiment: ArticleSentiment
+
+
+@dataclass
+class RedditOutput:
+    """Output from Reddit research agent."""
+    ticker: str
+    posts: list[RedditPost]
+    retrieved_at: datetime
+    status: str  # "success", "partial", "no_data", "error"
+    data_source: str = "reddit"  # "reddit_api" or "google_search"
+    subreddits_searched: list[str] = None  # List of subreddits queried
     error_message: str | None = None
 
 
 @dataclass
 class AggregatedReport:
     ticker: str
-    news: NewsOutput
-    earnings: EarningsOutput
-    macro: MacroOutput
+    news: NewsOutput | None
+    earnings: EarningsOutput | None
+    macro: MacroOutput | None
+    reddit: RedditOutput | None
     aggregated_at: datetime
     missing_components: list[AgentType]
 
@@ -669,12 +844,24 @@ class Signal:
 
 
 @dataclass
+class SentimentRationale:
+    """Detailed rationale for sentiment with source citations."""
+    summary: str  # Overall rationale summary
+    news_citations: list[str]  # Specific news headlines cited
+    earnings_citations: list[str]  # Earnings data points cited
+    macro_citations: list[str]  # Macro factors cited
+    reddit_citations: list[str]  # Reddit posts cited
+    html_formatted: str  # HTML-formatted rationale with links
+
+
+@dataclass
 class SentimentResult:
     ticker: str
     sentiment: Sentiment
     confidence: ConfidenceLevel
     signals: list[Signal]
     summary: str
+    rationale: SentimentRationale | None  # Detailed rationale with citations
     key_factors: list[str]
     risks: list[str]
     disclaimer: str
@@ -731,6 +918,7 @@ class DataSourceConfig:
     news_sources: list[SourceConfig]
     earnings_sources: list[SourceConfig]
     macro_sources: list[SourceConfig]
+    reddit_sources: list[SourceConfig]
     last_updated: datetime
 
 
@@ -779,9 +967,9 @@ class DeliveryResult:
 
 ### Property 3: News Article Completeness
 
-*For any* NewsArticle in the output, it SHALL contain non-empty values for headline, source, published_at, and summary fields.
+*For any* NewsArticle in the output, it SHALL contain non-empty values for headline, source, published_at, summary, and url fields.
 
-**Validates: Requirements 2.2**
+**Validates: Requirements 2.2, 2.8**
 
 ### Property 4: News Deduplication
 
@@ -801,113 +989,197 @@ class DeliveryResult:
 
 **Validates: Requirements 2.1**
 
-### Property 7: Earnings Data Completeness
+### Property 7: News Multi-Source Retrieval
 
-*For any* EarningsOutput with status "success", the earnings field SHALL contain non-null values for fiscal_quarter, revenue, eps, and report_date.
+*For any* successful NewsOutput, the articles SHALL include content from multiple news sources (Google News, CNBC, WSJ, Bloomberg, MarketWatch), and the sources_used field SHALL list all sources queried.
 
-**Validates: Requirements 3.2**
+**Validates: Requirements 2.6, 2.7**
 
-### Property 8: Earnings Comparison Validity
+### Property 8: Earnings Data Completeness
+
+*For any* EarningsOutput with status "success", the earnings field SHALL contain non-null values for fiscal_quarter, revenue, eps, and report_date, and SHALL include a source_url linking to the earnings report.
+
+**Validates: Requirements 3.2, 3.6**
+
+### Property 9: Earnings Comparison Validity
 
 *For any* EarningsOutput with both earnings data and analyst expectations, the comparison field SHALL be one of: BEAT, MISS, or MEET.
 
 **Validates: Requirements 3.3**
 
-### Property 9: Agent Failure Isolation
+### Property 10: Agent Failure Isolation
 
 *For any* agent that fails during execution, the other agents SHALL complete their execution, and the AggregatedReport SHALL list the failed agent in missing_components while containing results from successful agents.
 
-**Validates: Requirements 3.5, 5.3**
+**Validates: Requirements 3.5, 4.5, 5.3**
 
-### Property 10: Macro Analysis Completeness
+### Property 11: Macro Analysis Completeness
 
-*For any* MacroOutput with status "success", it SHALL contain a non-empty sector, at least one MacroFactor, and non-empty risks and opportunities lists.
+*For any* MacroOutput with status "success", it SHALL contain a non-empty sector, at least one MacroFactor with source_url, and non-empty risks and opportunities lists.
 
-**Validates: Requirements 4.1, 4.5**
+**Validates: Requirements 5.1, 5.5, 5.6**
 
-### Property 11: Aggregation Completeness
+### Property 12: Reddit Post Completeness
 
-*For any* AggregatedReport, it SHALL contain the ticker, outputs from all successful agents with their retrieved_at timestamps preserved, and an aggregated_at timestamp.
+*For any* RedditPost in the output, it SHALL contain non-empty values for title, subreddit, url (containing "reddit.com"), and created_at fields.
 
-**Validates: Requirements 5.1, 5.4, 5.5**
+**Validates: Requirements 4.2, 4.6**
 
-### Property 12: Sentiment Result Completeness
+### Property 13: Reddit Sentiment Classification
+
+*For any* RedditPost in the output, the sentiment field SHALL be one of: POSITIVE, NEGATIVE, or NEUTRAL.
+
+**Validates: Requirements 4.3**
+
+### Property 14: Reddit No-Data Handling
+
+*For any* ticker with no recent Reddit discussions, the RedditOutput SHALL have an empty posts list and status of "no_data" with an appropriate error_message.
+
+**Validates: Requirements 4.4**
+
+### Property 15: Reddit Subreddit Coverage
+
+*For any* successful RedditOutput, the subreddits_searched field SHALL include at least one of: wallstreetbets, stocks, investing, or StockMarket.
+
+**Validates: Requirements 4.1**
+
+### Property 16: Aggregation Completeness
+
+*For any* AggregatedReport, it SHALL contain the ticker, outputs from all successful agents (news, earnings, macro, reddit) with their retrieved_at timestamps preserved, and an aggregated_at timestamp.
+
+**Validates: Requirements 6.1, 6.4, 6.5**
+
+### Property 17: Sentiment Result Completeness
 
 *For any* SentimentResult, it SHALL contain: a sentiment value of BULLISH or BEARISH, a confidence level of HIGH/MEDIUM/LOW, a non-empty summary, a non-empty key_factors list, a risks list, and a disclaimer containing "not financial advice".
 
-**Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6**
+**Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.6, 7.7**
 
-### Property 13: Report Structure
+### Property 18: Sentiment Rationale Citations
 
-*For any* generated HTML report, it SHALL contain an executive summary section appearing before detailed sections, and SHALL be valid HTML with distinct section elements.
-
-**Validates: Requirements 7.1, 7.2, 7.3**
-
-### Property 14: Report Error Indication
-
-*For any* report generated from an AggregatedReport with non-empty missing_components, the HTML output SHALL contain visible indicators for each missing component.
+*For any* SentimentResult with a rationale, the rationale SHALL explicitly cite specific information from at least one of: news headlines, earnings data, Reddit discussions, or macro analysis that support the sentiment classification.
 
 **Validates: Requirements 7.5**
 
-### Property 15: Config Validation
+### Property 19: Report Executive Summary Table
 
-*For any* DataSourceConfig, it SHALL be parseable from the config file, and each SourceConfig SHALL contain non-empty api_endpoint, api_key_env, and added_at fields. Invalid configs SHALL produce validation errors.
+*For any* generated HTML report with multiple tickers, it SHALL contain an executive summary table at the top with one row per ticker, each containing: ticker name as hyperlink to detailed section, sentiment badge, confidence badge, and news count.
 
-**Validates: Requirements 8.1, 8.2, 8.5**
+**Validates: Requirements 8.2**
 
-### Property 16: Config Source Round-Trip
+### Property 20: Report Headlines as Hyperlinks
 
-*For any* data source added to the config and then removed, the system SHALL use the source while present and exclude it after removal, without requiring code changes.
+*For any* news headline displayed in the HTML report, it SHALL be rendered as a hyperlink (`<a>` tag) with href pointing to the article's source URL.
 
-**Validates: Requirements 8.3, 8.4**
+**Validates: Requirements 8.8**
 
-### Property 17: Recommendation Storage Completeness
+### Property 21: Report URL Validity
 
-*For any* recommendation saved to the database, querying by its ID SHALL return the complete record including ticker, sentiment_result, and the full aggregated_report.
+*For any* URL in the generated HTML report (href attributes), it SHALL NOT contain placeholder domains (example.com, placeholder.com, test.com) and SHALL be a valid URL format.
 
-**Validates: Requirements 9.1, 9.2**
+**Validates: Requirements 8.9**
 
-### Property 18: Feedback Association
+### Property 22: Report Navigation Links
 
-*For any* feedback submitted for a recommendation_id, querying that recommendation SHALL return the associated feedback with outcome, actual_movement, and submitted_at.
+*For any* ticker's detailed section in the HTML report, it SHALL include a navigation link at the bottom that links back to the executive summary table (href="#top" or similar anchor).
 
-**Validates: Requirements 9.3**
+**Validates: Requirements 8.10**
 
-### Property 19: History Query Correctness
+### Property 23: Report Source URL Display
 
-*For any* set of recommendations stored for a ticker within a date range, querying by that ticker and date range SHALL return exactly those recommendations.
+*For any* finding (news article, earnings data, macro factor, Reddit post) displayed in the HTML report, the source URL from which the information was collected SHALL be displayed or linked.
 
-**Validates: Requirements 9.4**
+**Validates: Requirements 8.11**
 
-### Property 20: Database Failure Resilience
+### Property 24: Report Earnings Display Correctness
 
-*For any* database write failure during recommendation storage, the system SHALL log the error and still deliver the email report successfully.
+*For any* report generated from an AggregatedReport where earnings data is present (earnings field is not None and status is "success"), the HTML output SHALL NOT contain "missing earnings" or similar error indicators for that ticker.
 
-**Validates: Requirements 9.5**
+**Validates: Requirements 8.12**
 
-### Property 21: Historical Reference Inclusion
+### Property 25: Report Structure
 
-*For any* ticker with existing recommendations in the database, the generated report SHALL include a HistoricalReference section containing past sentiment, date, and feedback for each historical recommendation.
+*For any* generated HTML report, it SHALL contain an executive summary section appearing before detailed sections, and SHALL be valid HTML with distinct section elements.
 
-**Validates: Requirements 10.1, 10.2, 10.3**
+**Validates: Requirements 8.1, 8.3**
 
-### Property 22: History Affects Confidence
+### Property 26: Report Error Indication
 
-*For any* ticker with historical recommendations that have accuracy feedback, the confidence calculation SHALL factor in the historical accuracy rate.
+*For any* report generated from an AggregatedReport with non-empty missing_components, the HTML output SHALL contain visible indicators for each missing component.
+
+**Validates: Requirements 8.5**
+
+### Property 27: Web Search Fallback Activation
+
+*For any* agent where API keys are not configured or API calls fail, the agent SHALL fall back to web search and return a valid output with the same structure as API-sourced data. The output data_source field SHALL indicate "web_search", "rss_feeds", or "google_search".
+
+**Validates: Requirements 10.1, 10.2**
+
+### Property 28: Web Search Data Integration
+
+*For any* data retrieved via web search fallback, it SHALL be included in the AggregatedReport and used for downstream sentiment analysis, with source URLs preserved.
 
 **Validates: Requirements 10.4**
 
-### Property 23: First Analysis Indicator
+### Property 29: End-to-End Without API Keys
 
-*For any* ticker with no historical recommendations, the HistoricalReference SHALL have is_first_analysis=True.
+*For any* analysis request when API keys are unavailable, the system SHALL complete end-to-end and generate a valid HTML report with real data (not mock data) using web search fallback.
 
 **Validates: Requirements 10.5**
 
-### Property 24: Web Search Fallback
+### Property 30: Config Validation
 
-*For any* agent where API keys are not configured or API calls fail, the agent SHALL fall back to web search and return a valid output with the same structure as API-sourced data. The output status SHALL indicate the data source used ("api" or "web_search").
+*For any* DataSourceConfig, it SHALL be parseable from the config file, and each SourceConfig SHALL contain non-empty api_endpoint, api_key_env, and added_at fields. Invalid configs SHALL produce validation errors.
 
-**Validates: Requirements 2.1, 3.1, 4.1**
+**Validates: Requirements 9.1, 9.2, 9.5**
+
+### Property 31: Config Source Round-Trip
+
+*For any* data source added to the config and then removed, the system SHALL use the source while present and exclude it after removal, without requiring code changes.
+
+**Validates: Requirements 9.3, 9.4**
+
+### Property 32: Recommendation Storage Completeness
+
+*For any* recommendation saved to the database, querying by its ID SHALL return the complete record including ticker, sentiment_result, and the full aggregated_report.
+
+**Validates: Requirements 11.1, 11.2**
+
+### Property 33: Feedback Association
+
+*For any* feedback submitted for a recommendation_id, querying that recommendation SHALL return the associated feedback with outcome, actual_movement, and submitted_at.
+
+**Validates: Requirements 11.3**
+
+### Property 34: History Query Correctness
+
+*For any* set of recommendations stored for a ticker within a date range, querying by that ticker and date range SHALL return exactly those recommendations.
+
+**Validates: Requirements 11.4**
+
+### Property 35: Database Failure Resilience
+
+*For any* database write failure during recommendation storage, the system SHALL log the error and still deliver the email report successfully.
+
+**Validates: Requirements 11.5**
+
+### Property 36: Historical Reference Inclusion
+
+*For any* ticker with existing recommendations in the database, the generated report SHALL include a HistoricalReference section containing past sentiment, date, and feedback for each historical recommendation.
+
+**Validates: Requirements 12.1, 12.2, 12.3**
+
+### Property 37: History Affects Confidence
+
+*For any* ticker with historical recommendations that have accuracy feedback, the confidence calculation SHALL factor in the historical accuracy rate.
+
+**Validates: Requirements 12.4**
+
+### Property 38: First Analysis Indicator
+
+*For any* ticker with no historical recommendations, the HistoricalReference SHALL have is_first_analysis=True.
+
+**Validates: Requirements 12.5**
 
 ## Error Handling
 
@@ -929,6 +1201,7 @@ class DeliveryResult:
 | `APIKeyMissingError` | API key environment variable not set | Fall back to web search immediately |
 | `DataParseError` | Unexpected API response format | Log raw response, fall back to web search |
 | `WebSearchError` | Web search failed | Log error, mark agent as failed, continue with other agents |
+| `RSSFeedError` | RSS feed unavailable or malformed | Try next RSS source, fall back to web search if all fail |
 
 ### Agent Errors
 
@@ -936,6 +1209,10 @@ class DeliveryResult:
 |-------|-------|----------|
 | `AgentTimeoutError` | Agent exceeds time limit (30s) | Cancel agent, mark as failed, continue with others |
 | `AgentExecutionError` | Unhandled exception in agent | Log stack trace, mark as failed, continue with others |
+| `NewsAgentError` | News retrieval failed from all sources | Mark NEWS as missing, continue with other agents |
+| `EarningsAgentError` | Earnings retrieval failed | Mark EARNINGS as missing, continue with other agents |
+| `MacroAgentError` | Macro analysis failed | Mark MACRO as missing, continue with other agents |
+| `RedditAgentError` | Reddit retrieval failed from all sources | Mark REDDIT as missing, continue with other agents |
 
 ### Database Errors
 
@@ -958,6 +1235,7 @@ class DeliveryResult:
 2. **Transparent Reporting**: All errors are reflected in the final report with clear indicators
 3. **Logging**: All errors logged with context for debugging
 4. **No Silent Failures**: User always receives feedback about what succeeded and what failed
+5. **Fallback Chain**: API → Web Search → Mark as Missing (never blocks other agents)
 
 ## Testing Strategy
 
@@ -984,27 +1262,49 @@ The Trading Copilot uses both unit tests and property-based tests for comprehens
    - Edge cases (empty string, special characters)
 
 2. **Agent Integration**
-   - Mock API responses for each agent
+   - Mock API responses for each agent (News, Earnings, Macro, Reddit)
    - Timeout handling
    - Malformed response handling
+   - Web search fallback triggering
 
-3. **Report Generation**
+3. **News Agent Multi-Source**
+   - RSS feed parsing from each source (Google News, CNBC, WSJ, Bloomberg, MarketWatch)
+   - Source combination and deduplication
+   - URL extraction and validation
+
+4. **Reddit Agent**
+   - Google Search fallback for Reddit posts
+   - Subreddit filtering
+   - Sentiment classification with Reddit-specific keywords
+   - URL validation (must contain reddit.com)
+
+5. **Report Generation**
    - HTML structure validation
-   - Section ordering
+   - Executive summary table with hyperlinks
+   - Headlines rendered as hyperlinks
+   - Navigation links (back to top)
+   - Source URL display
+   - Earnings display correctness (no false "missing" indicators)
    - Mobile responsiveness (CSS validation)
 
-4. **Email Delivery**
+6. **Sentiment Rationale**
+   - Citation generation from news articles
+   - Citation generation from Reddit posts
+   - Citation generation from earnings data
+   - Citation generation from macro factors
+
+7. **Email Delivery**
    - SMTP connection mocking
    - Delivery confirmation handling
 
-5. **Database Operations**
+8. **Database Operations**
    - CRUD operations for recommendations
    - Query by ticker and date range
    - Feedback association
 
 #### Property Tests
 
-Each correctness property (1-23) will have a corresponding property-based test:
+Each correctness property (1-38) will have a corresponding property-based test:
 
 ```python
 from hypothesis import given, strategies as st, settings
@@ -1025,7 +1325,17 @@ def test_news_deduplication(articles):
     assert len(headlines) == len(set(headlines))  # No duplicates
     assert len(result) <= len(articles)
 
-# Feature: trading-copilot, Property 12: Sentiment Result Completeness
+# Feature: trading-copilot, Property 12: Reddit Post Completeness
+@given(post=st.builds(RedditPost, ...))
+@settings(max_examples=100)
+def test_reddit_post_completeness(post):
+    assert post.title
+    assert post.subreddit
+    assert post.url
+    assert "reddit.com" in post.url
+    assert post.created_at is not None
+
+# Feature: trading-copilot, Property 17: Sentiment Result Completeness
 @given(report=st.builds(AggregatedReport, ...))
 @settings(max_examples=100)
 def test_sentiment_result_completeness(report):
@@ -1035,22 +1345,53 @@ def test_sentiment_result_completeness(report):
     assert len(result.summary) > 0
     assert len(result.key_factors) > 0
     assert "not financial advice" in result.disclaimer.lower()
+
+# Feature: trading-copilot, Property 20: Report Headlines as Hyperlinks
+@given(articles=st.lists(st.builds(NewsArticle, ...), min_size=1))
+@settings(max_examples=100)
+def test_report_headlines_as_hyperlinks(articles):
+    html = render_news_section(articles)
+    for article in articles:
+        # Each headline should be in an <a> tag with href
+        assert f'href="{article.url}"' in html or f"href='{article.url}'" in html
+
+# Feature: trading-copilot, Property 21: Report URL Validity
+@given(result=st.builds(SentimentResult, ...))
+@settings(max_examples=100)
+def test_report_url_validity(result):
+    html = generate_report(result)
+    # No placeholder URLs
+    assert "example.com" not in html
+    assert "placeholder.com" not in html
+    assert "test.com" not in html
+
+# Feature: trading-copilot, Property 27: Web Search Fallback Activation
+@given(ticker=st.text(min_size=1, max_size=5, alphabet=st.characters(whitelist_categories=('Lu',))))
+@settings(max_examples=100)
+def test_web_search_fallback(ticker):
+    # With no API keys configured
+    agent = NewsAgent(sources=[])
+    result = agent.research(ticker)
+    assert result.data_source in ["web_search", "rss_feeds"]
 ```
 
 ### Test Data Generation
 
 - **Tickers**: Generate random uppercase strings, mix of valid/invalid
-- **News Articles**: Generate with random headlines, dates within/outside 14-day window
+- **News Articles**: Generate with random headlines, dates within/outside 14-day window, valid URLs
+- **Reddit Posts**: Generate with random titles, subreddits from target list, reddit.com URLs
 - **Earnings Data**: Generate with random financial figures, various comparison scenarios
-- **Macro Factors**: Generate with random categories and impacts
+- **Macro Factors**: Generate with random categories, impacts, and source URLs
 - **Historical Data**: Generate recommendation histories with various feedback patterns
 
 ### Integration Testing
 
 1. **End-to-End Flow**: Test complete pipeline with mocked external APIs
-2. **Concurrent Agent Execution**: Verify agents run in parallel
-3. **Failure Scenarios**: Test various combinations of agent failures
-4. **Database Persistence**: Verify data survives application restart
+2. **End-to-End Without API Keys**: Test complete pipeline using web search fallback only
+3. **Concurrent Agent Execution**: Verify all four agents (News, Earnings, Macro, Reddit) run in parallel
+4. **Failure Scenarios**: Test various combinations of agent failures
+5. **Database Persistence**: Verify data survives application restart
+6. **Multi-Ticker Reports**: Test executive summary table generation with multiple tickers
 
 ### Test Environment
 
