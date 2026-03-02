@@ -53,10 +53,18 @@ class SourceConfig:
 
 
 @dataclass
+class RedditSourceConfig(SourceConfig):
+    """Reddit source configuration with subreddit list."""
+
+    subreddits: list[str] | None = None
+
+
+@dataclass
 class DataSourceConfig:
     news_sources: list[SourceConfig]
     earnings_sources: list[SourceConfig]
     macro_sources: list[SourceConfig]
+    reddit_sources: list[RedditSourceConfig]
     last_updated: datetime
 
 

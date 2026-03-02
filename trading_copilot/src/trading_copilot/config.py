@@ -10,7 +10,7 @@ from typing import Any
 
 import yaml
 
-from trading_copilot.models import DataSourceConfig, SourceConfig
+from trading_copilot.models import DataSourceConfig, RedditSourceConfig, SourceConfig
 
 
 # App configuration dataclasses
@@ -108,6 +108,16 @@ class ConfigManager:
                 source_errors = self._validate_source(source, f"{agent_type}[{i}]")
                 errors.extend(source_errors)
 
+        # Validate reddit_sources (optional)
+        if "reddit_sources" in config:
+            sources = config["reddit_sources"]
+            if not isinstance(sources, list):
+                errors.append("reddit_sources must be a list")
+            else:
+                for i, source in enumerate(sources):
+                    source_errors = self._validate_reddit_source(source, f"reddit_sources[{i}]")
+                    errors.extend(source_errors)
+
         return errors
 
     def _validate_source(self, source: dict[str, Any], prefix: str) -> list[str]:
@@ -129,12 +139,41 @@ class ConfigManager:
 
         return errors
 
+    def _validate_reddit_source(self, source: dict[str, Any], prefix: str) -> list[str]:
+        """Validate a Reddit source configuration."""
+        errors: list[str] = []
+
+        # Reddit sources have relaxed validation - api_key_env can be empty
+        required_fields = ["name", "api_endpoint", "added_at"]
+        for field in required_fields:
+            if field not in source:
+                errors.append(f"{prefix}: missing required field '{field}'")
+            elif field != "added_at" and not source[field]:
+                errors.append(f"{prefix}: '{field}' cannot be empty")
+
+        if "added_at" in source:
+            try:
+                datetime.fromisoformat(str(source["added_at"]))
+            except ValueError:
+                errors.append(f"{prefix}: 'added_at' must be a valid ISO datetime")
+
+        # Validate subreddits if present
+        if "subreddits" in source:
+            subreddits = source["subreddits"]
+            if not isinstance(subreddits, list):
+                errors.append(f"{prefix}: 'subreddits' must be a list")
+            elif not all(isinstance(s, str) for s in subreddits):
+                errors.append(f"{prefix}: all subreddits must be strings")
+
+        return errors
+
     def _parse_config(self, raw: dict[str, Any]) -> DataSourceConfig:
         """Parse raw config dict into DataSourceConfig."""
         return DataSourceConfig(
             news_sources=self._parse_sources(raw.get("news_sources", [])),
             earnings_sources=self._parse_sources(raw.get("earnings_sources", [])),
             macro_sources=self._parse_sources(raw.get("macro_sources", [])),
+            reddit_sources=self._parse_reddit_sources(raw.get("reddit_sources", [])),
             last_updated=datetime.now(),
         )
 
@@ -151,6 +190,20 @@ class ConfigManager:
             for s in sources
         ]
 
+    def _parse_reddit_sources(self, sources: list[dict[str, Any]]) -> list[RedditSourceConfig]:
+        """Parse list of Reddit source configs."""
+        return [
+            RedditSourceConfig(
+                name=s["name"],
+                api_endpoint=s["api_endpoint"],
+                api_key_env=s.get("api_key_env", ""),
+                added_at=datetime.fromisoformat(str(s["added_at"])),
+                enabled=s.get("enabled", True),
+                subreddits=s.get("subreddits"),
+            )
+            for s in sources
+        ]
+
     def get_sources_for_agent(self, agent_type: str) -> list[SourceConfig]:
         """Get configured data sources for an agent type."""
         if self._config is None:
@@ -161,6 +214,7 @@ class ConfigManager:
             "news": self._config.news_sources,
             "earnings": self._config.earnings_sources,
             "macro": self._config.macro_sources,
+            "reddit": self._config.reddit_sources,
         }
         return [s for s in source_map.get(agent_type, []) if s.enabled]
 

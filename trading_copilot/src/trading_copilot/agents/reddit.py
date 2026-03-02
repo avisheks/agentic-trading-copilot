@@ -11,7 +11,11 @@ from trading_copilot.agents.base import (
     ResearchAgent,
     WebSearchError,
 )
-from trading_copilot.models import AgentType, ArticleSentiment, Sentiment, Signal, SourceConfig
+from trading_copilot.models import AgentType, ArticleSentiment, RedditSourceConfig, Sentiment, Signal, SourceConfig
+
+
+# Default subreddits if not configured
+DEFAULT_SUBREDDITS = ["wallstreetbets", "stocks", "investing", "StockMarket"]
 
 
 class RedditPost:
@@ -71,6 +75,15 @@ class RedditAgent(ResearchAgent):
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
             },
         )
+        # Extract subreddits from config, fall back to defaults
+        self._subreddits = self._get_subreddits_from_config(sources)
+
+    def _get_subreddits_from_config(self, sources: list[SourceConfig]) -> list[str]:
+        """Extract subreddits from source configuration."""
+        for source in sources:
+            if isinstance(source, RedditSourceConfig) and source.subreddits:
+                return source.subreddits
+        return DEFAULT_SUBREDDITS
 
     def get_agent_type(self) -> AgentType:
         """Return the agent type."""
@@ -162,10 +175,8 @@ class RedditAgent(ResearchAgent):
         """
         posts = []
 
-        # Search in popular investing subreddits
-        subreddits = ["wallstreetbets", "stocks", "investing", "StockMarket"]
-
-        for subreddit in subreddits:
+        # Search in configured subreddits
+        for subreddit in self._subreddits:
             try:
                 # Use Google search to find Reddit posts
                 query = f"site:reddit.com/r/{subreddit} {ticker}"

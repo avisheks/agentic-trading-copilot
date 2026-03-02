@@ -31,3 +31,15 @@ macro_sources:
     api_key_env: "FRED_API_KEY"
     added_at: "2024-01-01T00:00:00"
     enabled: true
+
+reddit_sources:
+  - name: "Reddit Web Search"
+    api_endpoint: "https://www.google.com/search"
+    api_key_env: ""  # No API key needed for web search
+    added_at: "2024-01-01T00:00:00"
+    enabled: true
+    subreddits:
+      - wallstreetbets
+      - stocks
+      - investing
+      - StockMarket
