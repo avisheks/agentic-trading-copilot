@@ -11,20 +11,22 @@ from trading_copilot.models import (
 
 
 class TextReportGenerator:
-    """Generates formatted text reports from analysis results."""
+    """Generates formatted text reports from sentiment analysis results."""
 
-    SEPARATOR = "=" * 60
-    SUBSEPARATOR = "-" * 40
+    def __init__(self):
+        """Initialize the text report generator."""
+        self._section_separator = "=" * 60
+        self._subsection_separator = "-" * 40
 
     def generate(self, result: SentimentResult) -> str:
         """
-        Generate a formatted text report.
+        Generate a complete text report.
 
         Args:
-            result: Complete sentiment analysis result
+            result: SentimentResult from sentiment analysis
 
         Returns:
-            Formatted text string for console output
+            Formatted text report string
         """
         sections = [
             self._render_header(result),
@@ -39,75 +41,84 @@ class TextReportGenerator:
     def _render_header(self, result: SentimentResult) -> str:
         """Render the report header."""
         lines = [
-            self.SEPARATOR,
+            self._section_separator,
             f"TRADING COPILOT ANALYSIS REPORT",
             f"Ticker: {result.ticker}",
             f"Generated: {result.analyzed_at.strftime('%Y-%m-%d %H:%M UTC')}",
-            self.SEPARATOR,
+            self._section_separator,
         ]
         return "\n".join(lines)
 
     def _render_executive_summary(self, result: SentimentResult) -> str:
         """Render the executive summary section."""
-        sentiment_emoji = "📈" if result.sentiment == Sentiment.BULLISH else "📉"
-        sentiment_word = result.sentiment.value.upper()
-        confidence_word = result.confidence.value.upper()
+        sentiment_display = result.sentiment.value.upper()
+        confidence_display = result.confidence.value.upper()
 
         lines = [
             "EXECUTIVE SUMMARY",
-            self.SUBSEPARATOR,
-            f"Outlook: {sentiment_emoji} {sentiment_word} ({confidence_word} confidence)",
+            self._subsection_separator,
+            f"Sentiment: {sentiment_display}",
+            f"Confidence: {confidence_display}",
             "",
             result.summary,
             "",
             "Key Factors:",
         ]
 
-        for i, factor in enumerate(result.key_factors, 1):
-            lines.append(f"  {i}. {factor}")
+        for factor in result.key_factors:
+            lines.append(f"  • {factor}")
+
+        if result.risks:
+            lines.append("")
+            lines.append("Risks:")
+            for risk in result.risks:
+                lines.append(f"  • {risk}")
 
         return "\n".join(lines)
 
     def _render_news_findings(self, result: SentimentResult) -> str:
         """Render the news findings section."""
         lines = [
-            "NEWS ANALYSIS",
-            self.SUBSEPARATOR,
+            "NEWS FINDINGS",
+            self._subsection_separator,
         ]
 
         news = result.aggregated_report.news
+
         if not news or news.status == "no_data":
-            lines.append("No recent news data available.")
+            lines.append("No recent news data available for analysis.")
             return "\n".join(lines)
 
-        # Summary stats
-        total = len(news.articles)
-        positive = sum(1 for a in news.articles if a.sentiment == ArticleSentiment.POSITIVE)
-        negative = sum(1 for a in news.articles if a.sentiment == ArticleSentiment.NEGATIVE)
-        neutral = total - positive - negative
-
-        lines.extend([
-            f"Articles analyzed: {total}",
-            f"  Positive: {positive}",
-            f"  Negative: {negative}",
-            f"  Neutral: {neutral}",
-            "",
-        ])
-
-        # Show top headlines
-        if news.articles:
-            lines.append("Recent Headlines:")
-            for article in news.articles[:5]:
-                sentiment_indicator = {
-                    ArticleSentiment.POSITIVE: "[+]",
-                    ArticleSentiment.NEGATIVE: "[-]",
-                    ArticleSentiment.NEUTRAL: "[~]",
-                }.get(article.sentiment, "[?]")
-                lines.append(f"  {sentiment_indicator} {article.headline[:60]}...")
-
-        if news.status == "partial":
+        if news.error_message:
+            lines.append(f"Note: {news.error_message}")
             lines.append("")
-            lines.append("Note: Some news sources were unavailable.")
+
+        articles = news.articles
+        if not articles:
+            lines.append("No articles found in the past 14 days.")
+            return "\n".join(lines)
+
+        # Summary statistics
+        positive = sum(1 for a in articles if a.sentiment == ArticleSentiment.POSITIVE)
+        negative = sum(1 for a in articles if a.sentiment == ArticleSentiment.NEGATIVE)
+        neutral = len(articles) - positive - negative
+
+        lines.append(f"Articles analyzed: {len(articles)}")
+        lines.append(f"  Positive: {positive}")
+        lines.append(f"  Negative: {negative}")
+        lines.append(f"  Neutral: {neutral}")
+        lines.append("")
+
+        # Show top articles (up to 5)
+        lines.append("Recent Headlines:")
+        for article in articles[:5]:
+            sentiment_icon = self._get_sentiment_icon(article.sentiment)
+            date_str = article.published_at.strftime("%Y-%m-%d")
+            lines.append(f"  {sentiment_icon} [{date_str}] {article.headline}")
+            lines.append(f"      Source: {article.source}")
+
+        if len(articles) > 5:
+            lines.append(f"  ... and {len(articles) - 5} more articles")
 
         return "\n".join(lines)
 
@@ -115,48 +126,45 @@ class TextReportGenerator:
         """Render the sentiment recommendation section."""
         lines = [
             "SENTIMENT RECOMMENDATION",
-            self.SUBSEPARATOR,
+            self._subsection_separator,
         ]
 
         # Main recommendation
-        sentiment_word = result.sentiment.value.upper()
-        confidence_word = result.confidence.value
-        lines.append(f"Recommendation: {sentiment_word} for the next 1-2 weeks")
-        lines.append(f"Confidence Level: {confidence_word.capitalize()}")
+        sentiment_word = "BULLISH" if result.sentiment == Sentiment.BULLISH else "BEARISH"
+        confidence_word = result.confidence.value.upper()
+
+        lines.append(f"Recommendation: {sentiment_word} ({confidence_word} confidence)")
         lines.append("")
 
-        # Signals
+        # Signals breakdown
         if result.signals:
             lines.append("Signal Analysis:")
             for signal in result.signals:
-                direction = "Bullish" if signal.direction == Sentiment.BULLISH else "Bearish"
+                direction = "↑" if signal.direction == Sentiment.BULLISH else "↓"
                 strength_pct = int(signal.strength * 100)
-                lines.append(f"  • {signal.source.value.capitalize()}: {direction} ({strength_pct}% strength)")
-                lines.append(f"    {signal.reasoning}")
-            lines.append("")
-
-        # Risks
-        if result.risks:
-            lines.append("Risks to Consider:")
-            for risk in result.risks:
-                lines.append(f"  ⚠ {risk}")
+                lines.append(f"  {direction} {signal.source.value.capitalize()}: {strength_pct}% strength")
+                lines.append(f"      {signal.reasoning}")
+        else:
+            lines.append("No signals available for detailed analysis.")
 
         return "\n".join(lines)
 
     def _render_disclaimer(self, result: SentimentResult) -> str:
         """Render the disclaimer section."""
         lines = [
-            self.SEPARATOR,
+            self._section_separator,
             "DISCLAIMER",
-            self.SUBSEPARATOR,
+            self._subsection_separator,
             result.disclaimer,
-            self.SEPARATOR,
+            self._section_separator,
         ]
         return "\n".join(lines)
 
-
-def print_report(result: SentimentResult) -> None:
-    """Print a formatted report to console."""
-    generator = TextReportGenerator()
-    report = generator.generate(result)
-    print(report)
+    def _get_sentiment_icon(self, sentiment: ArticleSentiment) -> str:
+        """Get an icon for article sentiment."""
+        icons = {
+            ArticleSentiment.POSITIVE: "+",
+            ArticleSentiment.NEGATIVE: "-",
+            ArticleSentiment.NEUTRAL: "○",
+        }
+        return icons.get(sentiment, "?")
