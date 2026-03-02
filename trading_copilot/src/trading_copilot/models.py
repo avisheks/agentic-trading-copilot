@@ -138,13 +138,17 @@ class MacroOutput:
 
 
 @dataclass
-class AggregatedReport:
-    ticker: str
-    news: NewsOutput | None
-    earnings: EarningsOutput | None
-    macro: MacroOutput | None
-    aggregated_at: datetime
-    missing_components: list[AgentType]
+class RedditPost:
+    """Represents a Reddit post about a stock."""
+
+    title: str
+    subreddit: str
+    score: int
+    num_comments: int
+    url: str
+    created_at: datetime
+    snippet: str
+    sentiment: ArticleSentiment = ArticleSentiment.NEUTRAL
 
 
 @dataclass
@@ -153,6 +157,30 @@ class Signal:
     direction: Sentiment
     strength: float  # 0.0 to 1.0
     reasoning: str
+
+
+@dataclass
+class RedditOutput:
+    """Output from Reddit research."""
+
+    ticker: str
+    posts: list[RedditPost]
+    retrieved_at: datetime
+    status: str  # "success", "no_data", "error"
+    data_source: str = "web_search"
+    error_message: str | None = None
+    signal: Signal | None = None
+
+
+@dataclass
+class AggregatedReport:
+    ticker: str
+    news: NewsOutput | None
+    earnings: EarningsOutput | None
+    macro: MacroOutput | None
+    reddit: RedditOutput | None
+    aggregated_at: datetime
+    missing_components: list[AgentType]
 
 
 @dataclass

@@ -77,6 +77,7 @@ def create_sample_sentiment_result(
             news=news_output,
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=datetime.now(timezone.utc),
             missing_components=missing_components or [],
         ),

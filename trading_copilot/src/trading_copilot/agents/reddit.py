@@ -13,7 +13,16 @@ from trading_copilot.agents.base import (
     ResearchAgent,
     WebSearchError,
 )
-from trading_copilot.models import AgentType, ArticleSentiment, RedditSourceConfig, Sentiment, Signal, SourceConfig
+from trading_copilot.models import (
+    AgentType,
+    ArticleSentiment,
+    RedditOutput,
+    RedditPost,
+    RedditSourceConfig,
+    Sentiment,
+    Signal,
+    SourceConfig,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -24,51 +33,6 @@ DEFAULT_SUBREDDITS = ["wallstreetbets", "stocks", "investing", "StockMarket"]
 # Retry configuration
 MAX_RETRIES = 3
 RETRY_DELAYS = [1, 2, 4]  # Exponential backoff: 1s, 2s, 4s
-
-
-class RedditPost:
-    """Represents a Reddit post about a stock."""
-
-    def __init__(
-        self,
-        title: str,
-        subreddit: str,
-        score: int,
-        num_comments: int,
-        url: str,
-        created_at: datetime,
-        snippet: str = "",
-    ):
-        self.title = title
-        self.subreddit = subreddit
-        self.score = score
-        self.num_comments = num_comments
-        self.url = url
-        self.created_at = created_at
-        self.snippet = snippet
-        self.sentiment = ArticleSentiment.NEUTRAL
-
-
-class RedditOutput:
-    """Output from Reddit research."""
-
-    def __init__(
-        self,
-        ticker: str,
-        posts: list[RedditPost],
-        retrieved_at: datetime,
-        status: str,
-        data_source: str = "reddit",
-        error_message: Optional[str] = None,
-        signal: Optional[Signal] = None,
-    ):
-        self.ticker = ticker
-        self.posts = posts
-        self.retrieved_at = retrieved_at
-        self.status = status
-        self.data_source = data_source
-        self.error_message = error_message
-        self.signal = signal
 
 
 class RedditAgent(ResearchAgent):

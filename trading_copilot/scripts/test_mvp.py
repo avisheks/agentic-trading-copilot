@@ -155,8 +155,9 @@ async def run_mvp_test(ticker: str = "AAPL", use_mock: bool = False):
         news=news_output,
         earnings=None,  # Not implemented yet
         macro=None,     # Not implemented yet
+        reddit=None,    # Not fetched in test script
         aggregated_at=datetime.now(timezone.utc),
-        missing_components=[AgentType.EARNINGS, AgentType.MACRO],
+        missing_components=[AgentType.EARNINGS, AgentType.MACRO, AgentType.REDDIT],
     )
     print(f"  ✓ Aggregated report created")
     print(f"  Missing components: {[c.value for c in aggregated.missing_components]}")

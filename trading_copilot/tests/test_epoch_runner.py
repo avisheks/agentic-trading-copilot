@@ -84,6 +84,7 @@ def sample_aggregated_report(sample_news_output):
         news=sample_news_output,
         earnings=None,
         macro=None,
+        reddit=None,
         aggregated_at=datetime(2024, 1, 14, 12, 0, 0, tzinfo=timezone.utc),
         missing_components=[],
     )
@@ -227,6 +228,7 @@ class TestEpochRunnerExecute:
             ),
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=datetime.now(timezone.utc),
             missing_components=[],
         )
@@ -415,6 +417,7 @@ class TestEpochRunnerExecute:
             news=None,
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=datetime.now(timezone.utc),
             missing_components=[],
         )

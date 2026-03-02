@@ -90,6 +90,7 @@ class TestSentimentAnalyzer:
             news=news,
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=datetime.now(timezone.utc),
             missing_components=missing or [],
         )

@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from trading_copilot.agents.news import NewsAgent
+from trading_copilot.agents.reddit import RedditAgent
 from trading_copilot.analyzer import SentimentAnalyzer
 from trading_copilot.config import AppConfigManager, ConfigManager
 from trading_copilot.email_service import EmailService, SMTPConfig
@@ -28,6 +29,7 @@ from trading_copilot.models import (
     ArticleSentiment,
     NewsArticle,
     NewsOutput,
+    RedditOutput,
     SentimentResult,
 )
 from trading_copilot.report import TextReportGenerator
@@ -94,6 +96,7 @@ async def process_ticker(
     ticker: str, 
     use_mock: bool, 
     news_agent: NewsAgent | None,
+    reddit_agent: RedditAgent | None,
     validator: TickerValidator,
     analyzer: SentimentAnalyzer
 ) -> SentimentResult | None:
@@ -118,14 +121,29 @@ async def process_ticker(
             print(f"  ✗ {normalized_ticker}: Error fetching news - {e}")
             return None
     
+    # Fetch Reddit data concurrently
+    reddit_output: RedditOutput | None = None
+    if reddit_agent and not use_mock:
+        try:
+            reddit_output = await reddit_agent.research(normalized_ticker)
+        except Exception as e:
+            print(f"  ⚠ {normalized_ticker}: Error fetching Reddit data - {e}")
+            # Continue without Reddit data
+    
+    # Determine missing components
+    missing_components = [AgentType.EARNINGS, AgentType.MACRO]
+    if reddit_output is None or reddit_output.status in ("error", "no_data"):
+        missing_components.append(AgentType.REDDIT)
+    
     # Create aggregated report
     aggregated = AggregatedReport(
         ticker=normalized_ticker,
         news=news_output,
         earnings=None,
         macro=None,
+        reddit=reddit_output,
         aggregated_at=datetime.now(timezone.utc),
-        missing_components=[AgentType.EARNINGS, AgentType.MACRO],
+        missing_components=missing_components,
     )
     
     # Analyze sentiment
@@ -184,9 +202,14 @@ async def run_copilot(use_mock: bool = False, config_path: Path = None):
         
         news_sources = config_manager.get_sources_for_agent("news")
         news_agent = NewsAgent(news_sources)
+        
+        # Initialize Reddit agent
+        reddit_sources = config_manager.get_sources_for_agent("reddit")
+        reddit_agent = RedditAgent(reddit_sources)
     
     if use_mock:
         print("Using MOCK data (no API keys required)")
+        reddit_agent = None
     print()
     
     # Process all tickers
@@ -195,7 +218,7 @@ async def run_copilot(use_mock: bool = False, config_path: Path = None):
     
     try:
         for ticker in tickers:
-            result = await process_ticker(ticker, use_mock, news_agent, validator, analyzer)
+            result = await process_ticker(ticker, use_mock, news_agent, reddit_agent, validator, analyzer)
             if result:
                 results.append(result)
         
@@ -318,6 +341,8 @@ async def run_copilot(use_mock: bool = False, config_path: Path = None):
         # Clean up
         if news_agent:
             await news_agent.close()
+        if reddit_agent:
+            await reddit_agent.close()
 
 
 def main():

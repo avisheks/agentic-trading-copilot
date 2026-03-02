@@ -83,13 +83,14 @@ class HistoricalDataFetcher:
         )
         
         # Build AggregatedReport with only news data
-        missing_components = [AgentType.EARNINGS, AgentType.MACRO]
+        missing_components = [AgentType.EARNINGS, AgentType.MACRO, AgentType.REDDIT]
         
         return AggregatedReport(
             ticker=ticker,
             news=filtered_news_output,
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=self._ensure_utc(datetime.now(timezone.utc)),
             missing_components=missing_components,
         )

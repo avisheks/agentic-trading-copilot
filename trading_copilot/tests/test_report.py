@@ -54,6 +54,7 @@ class TestGenerateTable:
                 news=news,
                 earnings=None,
                 macro=None,
+                reddit=None,
                 aggregated_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
                 missing_components=[AgentType.EARNINGS, AgentType.MACRO],
             )
@@ -180,6 +181,7 @@ class TestGenerateFullReport:
                 news=news,
                 earnings=None,
                 macro=None,
+                reddit=None,
                 aggregated_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
                 missing_components=[AgentType.EARNINGS, AgentType.MACRO],
             )
@@ -298,6 +300,7 @@ class TestTextReportGenerator:
             news=sample_news_output,
             earnings=None,
             macro=None,
+            reddit=None,
             aggregated_at=datetime(2026, 2, 26, 12, 0, tzinfo=timezone.utc),
             missing_components=[AgentType.EARNINGS, AgentType.MACRO],
         )
