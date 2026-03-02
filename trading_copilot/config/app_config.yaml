@@ -28,5 +28,5 @@ report:
   include_news: true
   include_earnings: true
   include_macro: true
-  save_to_file: false
+  save_to_file: true
   output_directory: ./reports

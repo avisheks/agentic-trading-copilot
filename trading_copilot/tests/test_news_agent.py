@@ -365,7 +365,14 @@ class TestWebSearchFallback:
     @pytest.mark.asyncio
     async def test_research_via_web_search_handles_no_results(self):
         """_research_via_web_search handles empty results gracefully."""
-        output = await self.agent._research_via_web_search("AAPL")
+        from unittest.mock import AsyncMock, patch
+        
+        # Mock _web_search_fallback to raise WebSearchError (simulating no results)
+        with patch.object(self.agent, '_web_search_fallback', new_callable=AsyncMock) as mock_fallback:
+            from trading_copilot.agents.base import WebSearchError
+            mock_fallback.side_effect = WebSearchError("No results from any RSS feeds")
+            
+            output = await self.agent._research_via_web_search("AAPL")
         
         assert output.status == "no_data"
         assert output.data_source == "web_search"

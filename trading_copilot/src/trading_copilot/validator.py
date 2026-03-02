@@ -8,6 +8,7 @@ VALID_TICKERS = {
     # Tech
     "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA", "AMD", "INTC",
     "CRM", "ORCL", "ADBE", "CSCO", "IBM", "QCOM", "TXN", "AVGO", "NOW", "SNOW",
+    "SNPS",  # Synopsys - semiconductor design software
     # Finance
     "JPM", "BAC", "WFC", "GS", "MS", "C", "BLK", "SCHW", "AXP", "V", "MA", "PYPL",
     # Healthcare
@@ -16,12 +17,14 @@ VALID_TICKERS = {
     "WMT", "HD", "PG", "KO", "PEP", "COST", "NKE", "MCD", "SBUX", "TGT",
     # Energy
     "XOM", "CVX", "COP", "SLB", "EOG", "OXY", "PSX", "VLO", "MPC", "HAL",
+    "UUUU",  # Energy Fuels - uranium mining
     # Industrial
     "CAT", "BA", "HON", "UPS", "GE", "MMM", "LMT", "RTX", "DE", "UNP",
     # Telecom
     "T", "VZ", "TMUS", "CMCSA", "CHTR",
     # Other popular
     "DIS", "NFLX", "UBER", "LYFT", "ABNB", "SQ", "SHOP", "ZM", "DOCU", "CRWD",
+    "CRWV",  # Crown Crafts - consumer textiles
 }
 
 

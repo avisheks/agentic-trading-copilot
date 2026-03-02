@@ -21,6 +21,7 @@ class AgentType(Enum):
     NEWS = "news"
     EARNINGS = "earnings"
     MACRO = "macro"
+    REDDIT = "reddit"
 
 
 class ArticleSentiment(Enum):

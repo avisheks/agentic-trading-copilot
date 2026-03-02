@@ -103,20 +103,106 @@ class ResearchAgent(ABC):
 
     async def _web_search_fallback(self, ticker: str, query: str) -> list[dict]:
         """
-        Perform web search as fallback when APIs unavailable.
+        Perform web search using multiple RSS feeds.
 
-        This is a placeholder that returns mock data for MVP.
-        In production, this would integrate with a web search API.
+        Fetches from Google News, CNBC, WSJ, and Bloomberg RSS feeds.
 
         Args:
             ticker: Stock ticker symbol
             query: Search query string
 
         Returns:
-            List of search result dictionaries
+            List of search result dictionaries with title, link, published_at, snippet
         """
-        # MVP: Return empty list - subclasses can override with actual implementation
-        return []
+        import httpx
+        from bs4 import BeautifulSoup
+        from datetime import datetime, timezone
+        
+        all_results = []
+        
+        # Define RSS feed sources
+        rss_feeds = [
+            {
+                "url": f"https://news.google.com/rss/search?q={ticker}+stock&hl=en-US&gl=US&ceid=US:en",
+                "source_name": "Google News",
+                "limit": 30
+            },
+            {
+                "url": f"https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",
+                "source_name": "CNBC",
+                "limit": 20
+            },
+            {
+                "url": f"https://feeds.content.dowjones.io/public/rss/mw_topstories",
+                "source_name": "MarketWatch",
+                "limit": 20
+            },
+            {
+                "url": f"https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+                "source_name": "WSJ Markets",
+                "limit": 20
+            }
+        ]
+        
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            for feed in rss_feeds:
+                try:
+                    response = await client.get(feed["url"])
+                    response.raise_for_status()
+                    
+                    # Parse RSS feed
+                    soup = BeautifulSoup(response.content, 'xml')
+                    items = soup.find_all('item')
+                    
+                    for item in items[:feed["limit"]]:
+                        try:
+                            title = item.find('title').text if item.find('title') else ""
+                            
+                            # Skip if ticker not mentioned in title
+                            if ticker.upper() not in title.upper():
+                                continue
+                            
+                            link = item.find('link').text if item.find('link') else ""
+                            pub_date = item.find('pubDate').text if item.find('pubDate') else ""
+                            description = item.find('description').text if item.find('description') else ""
+                            
+                            # Parse publication date
+                            published_at = None
+                            if pub_date:
+                                try:
+                                    from email.utils import parsedate_to_datetime
+                                    published_at = parsedate_to_datetime(pub_date).isoformat()
+                                except:
+                                    published_at = datetime.now(timezone.utc).isoformat()
+                            else:
+                                published_at = datetime.now(timezone.utc).isoformat()
+                            
+                            # Extract source from title (Google News format: "Title - Source")
+                            source = feed["source_name"]
+                            if " - " in title:
+                                # Source is typically at the end after the last " - "
+                                potential_source = title.split(" - ")[-1].strip()
+                                if len(potential_source) < 50:  # Reasonable source name length
+                                    source = potential_source
+                            
+                            all_results.append({
+                                "title": title,
+                                "url": link,
+                                "published_at": published_at,
+                                "snippet": description if description else title,
+                                "source": source,
+                            })
+                        except Exception:
+                            continue
+                            
+                except Exception:
+                    # If one feed fails, continue with others
+                    continue
+        
+        if not all_results:
+            raise WebSearchError(f"No results from any RSS feeds for {ticker}")
+        
+        return all_results
 
     def _parse_web_results(self, results: list[dict]) -> Any:
         """

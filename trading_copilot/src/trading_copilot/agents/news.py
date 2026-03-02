@@ -177,7 +177,7 @@ class NewsAgent(ResearchAgent):
         Parse web search results into NewsArticle objects.
 
         Args:
-            results: List of search result dictionaries
+            results: List of search result dictionaries from multiple RSS feeds
 
         Returns:
             List of NewsArticle objects
@@ -185,27 +185,47 @@ class NewsAgent(ResearchAgent):
         articles = []
         for result in results:
             try:
-                # Parse published date if available, default to now
+                # Parse published date
                 published_str = result.get("published_at", "")
                 if published_str:
                     try:
+                        # Handle ISO format from RSS parser
                         published_at = datetime.fromisoformat(published_str.replace("Z", "+00:00"))
                     except ValueError:
                         published_at = datetime.now(timezone.utc)
                 else:
                     published_at = datetime.now(timezone.utc)
 
+                # Clean up the snippet (remove HTML if present)
+                # Priority: snippet > summary > title
+                snippet = result.get("snippet") or result.get("summary") or result.get("title", "")
+                if "<" in snippet:
+                    # Remove HTML tags if present
+                    from bs4 import BeautifulSoup
+                    snippet = BeautifulSoup(snippet, 'html.parser').get_text()
+
+                # Extract actual source from description
+                source = result.get("source", "Unknown")
+                if snippet and " - " in snippet:
+                    # Format is usually "Source - Article snippet"
+                    potential_source = snippet.split(" - ")[0].strip()
+                    # If it looks like a source name (not too long, has recognizable patterns)
+                    if len(potential_source) < 50 and not potential_source.lower().startswith(('the ', 'a ', 'an ')):
+                        source = potential_source
+                        # Remove source from snippet
+                        snippet = " - ".join(snippet.split(" - ")[1:])
+
                 articles.append(
                     NewsArticle(
                         headline=result.get("title", ""),
-                        source=result.get("source", "Web Search"),
+                        source=source,
                         published_at=published_at,
-                        summary=result.get("snippet", result.get("summary", "")),
+                        summary=snippet.strip(),
                         url=result.get("url", ""),
                         sentiment=ArticleSentiment.NEUTRAL,
                     )
                 )
-            except (ValueError, KeyError):
+            except (ValueError, KeyError) as e:
                 continue
 
         return articles

@@ -303,6 +303,8 @@ class TextReportGenerator:
             date_str = article.published_at.strftime("%Y-%m-%d")
             lines.append(f"  {sentiment_icon} [{date_str}] {article.headline}")
             lines.append(f"      Source: {article.source}")
+            if article.url:
+                lines.append(f"      URL: {article.url}")
 
         if len(articles) > 5:
             lines.append(f"  ... and {len(articles) - 5} more articles")
