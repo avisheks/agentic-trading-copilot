@@ -11,7 +11,7 @@ from trading_copilot.agents.base import (
     ResearchAgent,
     WebSearchError,
 )
-from trading_copilot.models import AgentType, ArticleSentiment, Signal, SourceConfig
+from trading_copilot.models import AgentType, ArticleSentiment, Sentiment, Signal, SourceConfig
 
 
 class RedditPost:
@@ -121,6 +121,9 @@ class RedditAgent(ResearchAgent):
             for post in filtered_posts:
                 post.sentiment = self._categorize_sentiment(post)
 
+            # Generate signal from posts
+            signal = self._generate_signal(filtered_posts)
+
             status = "success" if filtered_posts else "no_data"
 
             return RedditOutput(
@@ -128,6 +131,7 @@ class RedditAgent(ResearchAgent):
                 posts=filtered_posts,
                 retrieved_at=datetime.now(timezone.utc),
                 status=status,
+                signal=signal,
             )
 
         except Exception as e:
@@ -250,6 +254,54 @@ class RedditAgent(ResearchAgent):
         elif negative_count > positive_count:
             return ArticleSentiment.NEGATIVE
         return ArticleSentiment.NEUTRAL
+    def _generate_signal(self, posts: list[RedditPost]) -> Signal | None:
+        """
+        Generate aggregated sentiment signal from posts.
+
+        Direction: Majority sentiment across posts (engagement-weighted)
+        Strength: Weighted by engagement (score + comments)
+
+        Args:
+            posts: List of RedditPost objects with sentiment already classified
+
+        Returns:
+            Signal with source=REDDIT, direction, and strength, or None if no posts
+        """
+        if not posts:
+            return None
+
+        # Weight by engagement (score + comments + 1 to avoid zero weight)
+        weighted_positive = sum(
+            (p.score + p.num_comments + 1)
+            for p in posts
+            if p.sentiment == ArticleSentiment.POSITIVE
+        )
+        weighted_negative = sum(
+            (p.score + p.num_comments + 1)
+            for p in posts
+            if p.sentiment == ArticleSentiment.NEGATIVE
+        )
+
+        total_weight = weighted_positive + weighted_negative
+        if total_weight == 0:
+            return None
+
+        # Direction based on weighted majority
+        if weighted_positive > weighted_negative:
+            direction = Sentiment.BULLISH
+            strength = weighted_positive / total_weight
+        else:
+            direction = Sentiment.BEARISH
+            strength = weighted_negative / total_weight
+
+        return Signal(
+            source=AgentType.REDDIT,
+            direction=direction,
+            strength=min(strength, 1.0),
+            reasoning=f"Based on {len(posts)} Reddit posts",
+        )
+
+
 
     async def close(self):
         """Close the HTTP client."""
