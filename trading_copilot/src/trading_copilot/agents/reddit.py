@@ -1,5 +1,7 @@
 """Reddit research agent for Trading Copilot."""
 
+import asyncio
+import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
@@ -14,8 +16,14 @@ from trading_copilot.agents.base import (
 from trading_copilot.models import AgentType, ArticleSentiment, RedditSourceConfig, Sentiment, Signal, SourceConfig
 
 
+logger = logging.getLogger(__name__)
+
 # Default subreddits if not configured
 DEFAULT_SUBREDDITS = ["wallstreetbets", "stocks", "investing", "StockMarket"]
+
+# Retry configuration
+MAX_RETRIES = 3
+RETRY_DELAYS = [1, 2, 4]  # Exponential backoff: 1s, 2s, 4s
 
 
 class RedditPost:
@@ -89,6 +97,46 @@ class RedditAgent(ResearchAgent):
         """Return the agent type."""
         return AgentType.REDDIT
 
+    async def _fetch_with_retry(self, url: str) -> httpx.Response:
+        """
+        Fetch URL with exponential backoff retry logic.
+
+        Retries with delays: 1s, 2s, 4s
+        Returns error status after 3 failed retries.
+
+        Args:
+            url: URL to fetch
+
+        Returns:
+            httpx.Response on success
+
+        Raises:
+            httpx.HTTPError: After all retries exhausted
+        """
+        last_exception: Exception | None = None
+
+        for attempt in range(MAX_RETRIES):
+            try:
+                response = await self._http_client.get(url)
+                response.raise_for_status()
+                return response
+            except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                last_exception = e
+                if attempt < MAX_RETRIES - 1:
+                    delay = RETRY_DELAYS[attempt]
+                    logger.warning(
+                        f"Reddit search attempt {attempt + 1} failed: {e}. "
+                        f"Retrying in {delay}s..."
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    logger.error(
+                        f"Reddit search failed after {MAX_RETRIES} retries: {e}"
+                    )
+
+        # All retries exhausted, raise the last exception
+        raise last_exception  # type: ignore[misc]
+
     async def research(
         self,
         ticker: str,
@@ -115,7 +163,7 @@ class RedditAgent(ResearchAgent):
                     posts=[],
                     retrieved_at=datetime.now(timezone.utc),
                     status="no_data",
-                    error_message="No Reddit posts found",
+                    error_message=f"No Reddit posts found for {ticker}",
                 )
 
             # Filter by date range
@@ -147,13 +195,42 @@ class RedditAgent(ResearchAgent):
                 signal=signal,
             )
 
-        except Exception as e:
+        except httpx.ConnectError as e:
+            logger.error(f"Reddit agent connection error for {ticker}: {e}")
             return RedditOutput(
                 ticker=ticker,
                 posts=[],
                 retrieved_at=datetime.now(timezone.utc),
                 status="error",
-                error_message=str(e),
+                error_message=f"Connection error: Unable to reach Reddit search service",
+            )
+        except httpx.TimeoutException as e:
+            logger.error(f"Reddit agent timeout for {ticker}: {e}")
+            return RedditOutput(
+                ticker=ticker,
+                posts=[],
+                retrieved_at=datetime.now(timezone.utc),
+                status="error",
+                error_message=f"Request timeout after {MAX_RETRIES} retries",
+            )
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Reddit agent HTTP error for {ticker}: {e}")
+            return RedditOutput(
+                ticker=ticker,
+                posts=[],
+                retrieved_at=datetime.now(timezone.utc),
+                status="error",
+                error_message=f"HTTP error {e.response.status_code}: {e.response.reason_phrase}",
+            )
+        except Exception as e:
+            # Catch all other exceptions to ensure we never block other agents
+            logger.error(f"Reddit agent unexpected error for {ticker}: {e}")
+            return RedditOutput(
+                ticker=ticker,
+                posts=[],
+                retrieved_at=datetime.now(timezone.utc),
+                status="error",
+                error_message=f"Unexpected error: {type(e).__name__}: {str(e)}",
             )
 
     async def _search_reddit(
@@ -164,6 +241,8 @@ class RedditAgent(ResearchAgent):
     ) -> list[RedditPost]:
         """
         Search Reddit using Google search with site:reddit.com.
+
+        Uses exponential backoff retry for transient errors.
 
         Args:
             ticker: Stock ticker symbol
@@ -189,8 +268,8 @@ class RedditAgent(ResearchAgent):
                     date_max = end_date.strftime("%m/%d/%Y")
                     search_url += f"&tbs=cdr:1,cd_min:{date_min},cd_max:{date_max}"
 
-                response = await self._http_client.get(search_url)
-                response.raise_for_status()
+                # Use retry logic for HTTP requests
+                response = await self._fetch_with_retry(search_url)
 
                 soup = BeautifulSoup(response.content, "html.parser")
 
@@ -221,10 +300,17 @@ class RedditAgent(ResearchAgent):
                         )
                         posts.append(post)
 
-                    except Exception:
+                    except Exception as parse_error:
+                        logger.debug(f"Failed to parse search result: {parse_error}")
                         continue
 
-            except Exception:
+            except (httpx.ConnectError, httpx.TimeoutException, httpx.HTTPStatusError) as e:
+                # Log but continue to next subreddit - partial results are better than none
+                logger.warning(f"Failed to search r/{subreddit} for {ticker}: {e}")
+                continue
+            except Exception as e:
+                # Catch any other unexpected errors
+                logger.warning(f"Unexpected error searching r/{subreddit}: {e}")
                 continue
 
         return posts
