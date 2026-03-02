@@ -49,7 +49,12 @@ class HistoricalDataFetcher:
             with status "no_data" when no articles are found.
         """
         # Fetch news using the existing NewsAgent
-        news_output = await self._news_agent.research(ticker)
+        # Pass date range to NewsAgent so it can filter at retrieval time
+        news_output = await self._news_agent.research(
+            ticker,
+            start_date=start_date,
+            end_date=end_date,
+        )
         
         # Filter articles to the specified date range
         filtered_articles = self._filter_articles_by_date_range(

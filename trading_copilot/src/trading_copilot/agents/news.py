@@ -1,7 +1,7 @@
 """News research agent for Trading Copilot."""
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
 import httpx
@@ -37,7 +37,12 @@ class NewsAgent(ResearchAgent):
         """Return the agent type."""
         return AgentType.NEWS
 
-    async def research(self, ticker: str) -> NewsOutput:
+    async def research(
+        self,
+        ticker: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> NewsOutput:
         """
         Retrieve news articles from past 14 days.
 
@@ -45,6 +50,8 @@ class NewsAgent(ResearchAgent):
 
         Args:
             ticker: Validated stock ticker symbol
+            start_date: Optional start date for filtering articles (inclusive)
+            end_date: Optional end date for filtering articles (inclusive)
 
         Returns:
             NewsOutput with articles and metadata
@@ -52,7 +59,7 @@ class NewsAgent(ResearchAgent):
         if self._has_api_keys():
             return await self._research_via_api(ticker)
         else:
-            return await self._research_via_web_search(ticker)
+            return await self._research_via_web_search(ticker, start_date, end_date)
 
     async def _research_via_api(self, ticker: str) -> NewsOutput:
         """
@@ -114,12 +121,19 @@ class NewsAgent(ResearchAgent):
             error_message="; ".join(errors) if errors else None,
         )
 
-    async def _research_via_web_search(self, ticker: str) -> NewsOutput:
+    async def _research_via_web_search(
+        self,
+        ticker: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> NewsOutput:
         """
         Fetch news using web search fallback.
 
         Args:
             ticker: Validated stock ticker symbol
+            start_date: Optional start date for filtering articles (inclusive)
+            end_date: Optional end date for filtering articles (inclusive)
 
         Returns:
             NewsOutput with articles from web search
@@ -140,9 +154,14 @@ class NewsAgent(ResearchAgent):
 
             articles = self._parse_web_results(results)
 
-            # Filter to past 14 days
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
-            filtered_articles = self._filter_by_date(articles, cutoff_date)
+            # Filter articles by date
+            # If start_date and end_date are provided, filter to that range (inclusive)
+            # Otherwise, use the default 14-day lookback from today
+            if start_date is not None and end_date is not None:
+                filtered_articles = self._filter_by_date_range(articles, start_date, end_date)
+            else:
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=14)
+                filtered_articles = self._filter_by_date(articles, cutoff_date)
 
             # Deduplicate
             deduplicated = self.deduplicate(filtered_articles)
@@ -351,6 +370,30 @@ class NewsAgent(ResearchAgent):
     ) -> list[NewsArticle]:
         """Filter articles to only include those after cutoff date."""
         return [a for a in articles if a.published_at >= cutoff]
+
+    def _filter_by_date_range(
+        self,
+        articles: list[NewsArticle],
+        start_date: date,
+        end_date: date,
+    ) -> list[NewsArticle]:
+        """
+        Filter articles to only include those within the specified date range (inclusive).
+
+        Args:
+            articles: List of articles to filter
+            start_date: Start date of the range (inclusive)
+            end_date: End date of the range (inclusive)
+
+        Returns:
+            List of articles with published_at dates within the range
+        """
+        filtered = []
+        for article in articles:
+            article_date = article.published_at.date()
+            if start_date <= article_date <= end_date:
+                filtered.append(article)
+        return filtered
 
     def deduplicate(self, articles: list[NewsArticle]) -> list[NewsArticle]:
         """

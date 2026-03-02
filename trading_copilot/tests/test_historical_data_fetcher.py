@@ -239,7 +239,7 @@ class TestHistoricalDataFetcher:
     async def test_fetch_uses_existing_news_agent(self, mock_news_agent):
         """Test that fetch uses the same data sources via NewsAgent.
         
-        Validates: Requirement 1.2
+        Validates: Requirement 1.2, Bugfix Requirement 2.1
         """
         mock_news_agent.research.return_value = NewsOutput(
             ticker="AAPL",
@@ -250,14 +250,21 @@ class TestHistoricalDataFetcher:
         )
 
         fetcher = HistoricalDataFetcher(mock_news_agent)
+        start = date(2024, 1, 1)
+        end = date(2024, 1, 14)
         await fetcher.fetch(
             ticker="AAPL",
-            start_date=date(2024, 1, 1),
-            end_date=date(2024, 1, 14),
+            start_date=start,
+            end_date=end,
         )
 
-        # Verify NewsAgent.research was called with the ticker
-        mock_news_agent.research.assert_called_once_with("AAPL")
+        # Verify NewsAgent.research was called with the ticker and date range
+        # Date range is passed so NewsAgent can filter at retrieval time
+        mock_news_agent.research.assert_called_once_with(
+            "AAPL",
+            start_date=start,
+            end_date=end,
+        )
 
     @pytest.mark.asyncio
     async def test_fetch_returns_aggregated_report_structure(
