@@ -1,6 +1,6 @@
 """Reddit research agent for Trading Copilot."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
 import httpx
@@ -76,18 +76,25 @@ class RedditAgent(ResearchAgent):
         """Return the agent type."""
         return AgentType.REDDIT
 
-    async def research(self, ticker: str) -> RedditOutput:
+    async def research(
+        self,
+        ticker: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> RedditOutput:
         """
         Retrieve Reddit posts mentioning the ticker.
 
         Args:
             ticker: Validated stock ticker symbol
+            start_date: Optional start date for filtering (inclusive)
+            end_date: Optional end date for filtering (inclusive)
 
         Returns:
             RedditOutput with posts from relevant subreddits
         """
         try:
-            posts = await self._search_reddit(ticker)
+            posts = await self._search_reddit(ticker, start_date, end_date)
 
             if not posts:
                 return RedditOutput(
@@ -98,9 +105,17 @@ class RedditAgent(ResearchAgent):
                     error_message="No Reddit posts found",
                 )
 
-            # Filter to past 7 days
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
-            filtered_posts = [p for p in posts if p.created_at >= cutoff_date]
+            # Filter by date range
+            if start_date is not None and end_date is not None:
+                # Filter to inclusive date range when parameters provided
+                filtered_posts = [
+                    p for p in posts
+                    if start_date <= p.created_at.date() <= end_date
+                ]
+            else:
+                # Default: filter to past 7 days
+                cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
+                filtered_posts = [p for p in posts if p.created_at >= cutoff_date]
 
             # Analyze sentiment
             for post in filtered_posts:
@@ -124,12 +139,19 @@ class RedditAgent(ResearchAgent):
                 error_message=str(e),
             )
 
-    async def _search_reddit(self, ticker: str) -> list[RedditPost]:
+    async def _search_reddit(
+        self,
+        ticker: str,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> list[RedditPost]:
         """
         Search Reddit using Google search with site:reddit.com.
 
         Args:
             ticker: Stock ticker symbol
+            start_date: Optional start date for filtering (inclusive)
+            end_date: Optional end date for filtering (inclusive)
 
         Returns:
             List of RedditPost objects
@@ -144,6 +166,13 @@ class RedditAgent(ResearchAgent):
                 # Use Google search to find Reddit posts
                 query = f"site:reddit.com/r/{subreddit} {ticker}"
                 search_url = f"https://www.google.com/search?q={query}&num=10"
+                
+                # Add date filter if date range is provided
+                # Google search date filter format: tbs=cdr:1,cd_min:MM/DD/YYYY,cd_max:MM/DD/YYYY
+                if start_date is not None and end_date is not None:
+                    date_min = start_date.strftime("%m/%d/%Y")
+                    date_max = end_date.strftime("%m/%d/%Y")
+                    search_url += f"&tbs=cdr:1,cd_min:{date_min},cd_max:{date_max}"
 
                 response = await self._http_client.get(search_url)
                 response.raise_for_status()
