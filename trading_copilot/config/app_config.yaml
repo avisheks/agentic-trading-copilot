@@ -30,3 +30,9 @@ report:
   include_macro: true
   save_to_file: true
   output_directory: ./reports
+
+# Evaluation module settings for backtesting sentiment predictions
+evaluation:
+  num_epochs: 10           # Number of epochs to evaluate (1-52)
+  max_parallelism: 4       # Maximum concurrent epoch executions
+  ticker: AAPL             # Default ticker for evaluation

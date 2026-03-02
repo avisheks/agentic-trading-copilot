@@ -21,6 +21,7 @@ from trading_copilot.evaluation.models import (
 )
 from trading_copilot.evaluation.outcome_fetcher import OutcomeFetcher
 from trading_copilot.evaluation.report_generator import EvaluationReportGenerator
+from trading_copilot.evaluation.evaluation_runner import EvaluationRunner
 
 __all__ = [
     # Errors
@@ -31,6 +32,7 @@ __all__ = [
     "OutcomeFetchError",
     # Components
     "EvaluationReportGenerator",
+    "EvaluationRunner",
     "HistoricalDataFetcher",
     "OutcomeFetcher",
     # Models
